@@ -1,15 +1,16 @@
-bl_info = {
-  "name": "Asset Forge",
-  "author": "Jack Christensen",
-  "version": (0, 1, 0),
-  "blender": (5, 0, 1),
-  "location": "View3D > Sidebar > BtoU",
-  "description": "Export bridge from Blender to Unreal Engine",
-  "category": "3D View",
-}
-
 import bpy
+from bpy.types import PropertyGroup
+from bpy.props import StringProperty
+
 import os
+
+class AF_Settings(PropertyGroup):
+    export_dir: StringProperty(
+        name="Export Folder",
+        description="Folder to export FBX files into",
+        subtype="DIR_PATH",
+        default="//Exports"
+    )
 
 def export_active_mesh_fbx(export_path: str):
     obj = bpy.context.active_object
@@ -43,8 +44,11 @@ class AF_OT_export(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        export_dir = bpy.path.abspath("//Exports")
-        filename = "test1.fbx"
+        settings = context.scene.af
+        export_dir = bpy.path.abspath(settings.export_dir)
+        
+        obj = bpy.context.active_object
+        filename = f"{obj.name}.fbx"
         export_path = os.path.join(export_dir, filename)
         
         try:
@@ -54,7 +58,6 @@ class AF_OT_export(bpy.types.Operator):
             return {"CANCELLED"}
         
         self.report({"INFO"}, f"Exported: {export_path}")
-        print("Exported:", export_path)
         return {"FINISHED"}
 
 
@@ -67,22 +70,8 @@ class AF_PT_panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        settings = context.scene.af
         
-        layout.label(text="Blender to Unreal Engine Bridge")
+        layout.prop(settings, "export_dir")
+        layout.separator()
         layout.operator("af.export", text="Export Asset")
-        
-
-classes = (AF_OT_export, AF_PT_panel)
-
-
-def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
-
-
-def unregister():
-    for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
-
-if __name__ == "__main__":
-    register()
