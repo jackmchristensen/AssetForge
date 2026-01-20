@@ -1,8 +1,8 @@
 import bpy
 from bpy.types import PropertyGroup
 from bpy.props import StringProperty
-
 import os
+import json
 
 class AF_Settings(PropertyGroup):
     export_dir: StringProperty(
@@ -12,15 +12,22 @@ class AF_Settings(PropertyGroup):
         default="//Exports"
     )
 
-def export_active_mesh_fbx(export_path: str):
+
+def get_active_object():
     obj = bpy.context.active_object
     
     if obj is None or obj.type != 'MESH':
-        raise RuntimeError("Please select the mesh to export.")
+        raise RuntimeError("Please select a mesh to export.")
         
     bpy.ops.object.select_all(action='DESELECT')
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
+    
+    return obj
+
+
+def export_active_mesh_fbx(export_path: str):
+    obj = get_active_object()
     
     os.makedirs(os.path.dirname(export_path), exist_ok=True)
     
@@ -38,6 +45,21 @@ def export_active_mesh_fbx(export_path: str):
     )
 
 
+def export_active_mesh_data(export_path: str):
+    obj = get_active_object()
+    
+    os.makedirs(os.path.dirname(export_path), exist_ok=True)
+    
+    mesh_data = {
+        "mesh": [
+            {"name": obj.name, "vertices": len(obj.data.vertices)}
+        ]
+    }
+    
+    with open(export_path, 'w') as f:
+        json.dump(mesh_data, f)
+    
+
 class AF_OT_export(bpy.types.Operator):
     bl_idname = "af.export"
     bl_label = "Export Active Mesh (FBX)"
@@ -49,15 +71,20 @@ class AF_OT_export(bpy.types.Operator):
         
         obj = bpy.context.active_object
         filename = f"{obj.name}.fbx"
-        export_path = os.path.join(export_dir, filename)
+        object_export_path = os.path.join(export_dir, filename)
         
+        obj_data = f"{obj.name}.json"
+        data_export_path= os.path.join(export_dir, obj_data)
+       
         try:
-            export_active_mesh_fbx(export_path)
+            export_active_mesh_fbx(object_export_path)
+            export_active_mesh_data(data_export_path)           
+                
         except Exception as e:
             self.report({"ERROR"}, str(e))
             return {"CANCELLED"}
         
-        self.report({"INFO"}, f"Exported: {export_path}")
+        self.report({"INFO"}, f"Exported: {object_export_path}")
         return {"FINISHED"}
 
 
