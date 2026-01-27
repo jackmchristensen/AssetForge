@@ -9,6 +9,8 @@ from .metadata import statistics
 
 
 class AF_Settings(bt.PropertyGroup):
+    """User-configurable export settings for Asset Forge."""
+
     export_dir: bpy.props.StringProperty(
         name="Export Folder",
         description="Folder to export FBX files into",
@@ -17,7 +19,7 @@ class AF_Settings(bt.PropertyGroup):
     )  # type: ignore
 
 
-def get_active_object() -> bt.Object:
+def ensure_active_mesh_object() -> bt.Object:
     obj = bpy.context.active_object
 
     if obj is None or obj.type != "MESH":
@@ -30,7 +32,7 @@ def get_active_object() -> bt.Object:
     return obj
 
 
-def export_active_mesh_fbx(export_path: str):
+def export_active_mesh_fbx(export_path: str) -> None:
     os.makedirs(os.path.dirname(export_path), exist_ok=True)
 
     bpy.ops.export_scene.fbx(
@@ -47,7 +49,7 @@ def export_active_mesh_fbx(export_path: str):
     )
 
 
-def export_mesh_metadata(export_path: str, mesh_data: dict):
+def export_mesh_metadata(export_path: str, mesh_data: dict) -> None:
     os.makedirs(os.path.dirname(export_path), exist_ok=True)
 
     with open(export_path, "w") as f:
@@ -63,14 +65,14 @@ class AF_OT_export(bt.Operator):
         settings: AF_Settings = context.scene.af
         export_dir: str = bpy.path.abspath(settings.export_dir)
 
-        obj: bt.Object = bpy.context.active_object
+        obj: bt.Object = ensure_active_mesh_object()
         filename: str = f"{obj.name}.fbx"
         object_export_path: str = os.path.join(export_dir, filename)
 
         obj_data: str = f"{obj.name}.json"
         data_export_path: str = os.path.join(export_dir, obj_data)
 
-        mesh_data: dir[str, Any] = statistics.generate_metadata(obj, data_export_path, bpy.context)
+        mesh_data: dict[str, Any] = statistics.generate_metadata(obj, data_export_path, bpy.context)
 
         try:
             export_active_mesh_fbx(object_export_path)
