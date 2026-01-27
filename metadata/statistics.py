@@ -1,9 +1,11 @@
 import bpy
 import datetime
+
+from bpy import types as bt
 from typing import Any
 
 
-def get_evaluated_mesh_stats(obj: bpy.types.Object, context: bpy.types.Context) -> dict[str, int]:
+def get_evaluated_mesh_stats(obj: bt.Object, context: bt.Context) -> dict[str, int]:
     """Return mesh statistics after all modifiers are evaluated.
 
     A temporary evaluated mesh is created to compute statistics and is
@@ -11,9 +13,9 @@ def get_evaluated_mesh_stats(obj: bpy.types.Object, context: bpy.types.Context) 
     """
 
     depsgraph: Any = context.evaluated_depsgraph_get()
-    obj_eval: bpy.types.Object = obj.evaluated_get(depsgraph)
+    obj_eval: bt.Object = obj.evaluated_get(depsgraph)
 
-    mesh_eval: bpy.types.Mesh = obj_eval.to_mesh(preserve_all_data_layers=True, depsgraph=depsgraph)
+    mesh_eval: bt.Mesh = obj_eval.to_mesh(preserve_all_data_layers=True, depsgraph=depsgraph)
 
     try:
         verts: int = len(mesh_eval.vertices)
@@ -32,7 +34,7 @@ def get_evaluated_mesh_stats(obj: bpy.types.Object, context: bpy.types.Context) 
         obj_eval.to_mesh_clear()
 
 
-def generate_metadata(obj: bpy.types.Object, export_path: str, context: bpy.types.Context) -> dict[str, Any]:
+def generate_metadata(obj: bt.Object, export_path: str, context: bt.Context) -> dict[str, Any]:
     """Generate export metadata for a Blender object.
 
     Builds a JSON-serializable metadata dictionary containing source
