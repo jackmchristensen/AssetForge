@@ -13,8 +13,11 @@ _needs_reload = "asset_forge" in locals()
 if _needs_reload:
         import importlib
         asset_forge = importlib.reload(asset_forge)
+        statistics = importlib.reload(statistics)
 
 import bpy
+
+from .metadata import statistics
 from . import (
     asset_forge
 )
