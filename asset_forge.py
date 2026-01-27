@@ -1,11 +1,10 @@
-import json
 import os
 import bpy
 
 from bpy import types as bt
 from typing import Any
 
-from .metadata import statistics
+from .export import metadata, obj_exporter
 
 
 class AF_Settings(bt.PropertyGroup):
@@ -32,30 +31,6 @@ def ensure_active_mesh_object() -> bt.Object:
     return obj
 
 
-def export_active_mesh_fbx(export_path: str) -> None:
-    os.makedirs(os.path.dirname(export_path), exist_ok=True)
-
-    bpy.ops.export_scene.fbx(
-        filepath=export_path,
-        use_selection=True,
-        apply_unit_scale=True,
-        apply_scale_options="FBX_SCALE_ALL",
-        object_types={"MESH"},
-        use_mesh_modifiers=True,
-        add_leaf_bones=False,
-        bake_anim=False,
-        axis_forward="-Y",
-        axis_up="Z",
-    )
-
-
-def export_mesh_metadata(export_path: str, mesh_data: dict) -> None:
-    os.makedirs(os.path.dirname(export_path), exist_ok=True)
-
-    with open(export_path, "w") as f:
-        json.dump(mesh_data, f)
-
-
 class AF_OT_export(bt.Operator):
     bl_idname: str  = "af.export"
     bl_label: str   = "Export Active Mesh (FBX)"
@@ -72,11 +47,11 @@ class AF_OT_export(bt.Operator):
         obj_data: str = f"{obj.name}.json"
         data_export_path: str = os.path.join(export_dir, obj_data)
 
-        mesh_data: dict[str, Any] = statistics.generate_metadata(obj, data_export_path, bpy.context)
+        mesh_data: dict[str, Any] = metadata.generate_metadata(obj, data_export_path, bpy.context)
 
         try:
-            export_active_mesh_fbx(object_export_path)
-            export_mesh_metadata(data_export_path, mesh_data)
+            obj_exporter.export_active_mesh_fbx(object_export_path)
+            obj_exporter.export_mesh_metadata(data_export_path, mesh_data)
 
         except Exception as e:
             self.report({"ERROR"}, str(e))
