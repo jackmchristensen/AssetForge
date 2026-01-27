@@ -4,7 +4,7 @@ import bpy
 from bpy import types as bt
 from typing import Any
 
-from .export import metadata, obj_exporter
+from .export import mesh_exporter, mesh_metadata
 
 
 class AF_Settings(bt.PropertyGroup):
@@ -47,11 +47,11 @@ class AF_OT_export(bt.Operator):
         obj_data: str = f"{obj.name}.json"
         data_export_path: str = os.path.join(export_dir, obj_data)
 
-        mesh_data: dict[str, Any] = metadata.generate_metadata(obj, data_export_path, bpy.context)
+        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, data_export_path, bpy.context)
 
         try:
-            obj_exporter.export_active_mesh_fbx(object_export_path)
-            obj_exporter.export_mesh_metadata(data_export_path, mesh_data)
+            mesh_exporter.export_active_mesh_fbx(object_export_path)
+            mesh_exporter.export_mesh_metadata(data_export_path, mesh_data)
 
         except Exception as e:
             self.report({"ERROR"}, str(e))

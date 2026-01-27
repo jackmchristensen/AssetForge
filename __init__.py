@@ -13,14 +13,14 @@ _needs_reload = "asset_forge" in locals()
 if _needs_reload:
         import importlib
         asset_forge = importlib.reload(asset_forge)
-        metadata = importlib.reload(metadata)
-        obj_exporter = importlib.reload(obj_exporter)
+        mesh_metadata = importlib.reload(mesh_metadata)
+        mesh_exporter = importlib.reload(mesh_exporter)
 
 import bpy
 
 from .export import (
-    metadata,
-    obj_exporter
+    mesh_exporter,
+    mesh_metadata
 )
 from . import (
     asset_forge
