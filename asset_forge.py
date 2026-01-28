@@ -7,16 +7,32 @@ from typing import Any
 from .export import mesh_exporter, mesh_metadata
 from .validation import validate_mesh
 
+def update_export_dir(self, context):
+    if self.export_dir:
+        self.export_dir = bpy.path.abspath(self.export_dir)
+
 
 class AF_Settings(bt.PropertyGroup):
     """User-configurable export settings for Asset Forge."""
 
     export_dir: bpy.props.StringProperty(
         name="Export Folder",
-        description="Folder to export FBX files into",
+        description="Folder to export FBX files to.\nSupports relative paths using '//'.",
         subtype="DIR_PATH",
-        default="//Exports",
+        default="",
+        update=update_export_dir
     )  # type: ignore
+
+    asset_type: bpy.props.EnumProperty(
+        name="Asset Type",
+        description="Choose validation/export profile.",
+        items=[
+            ("PROP_SMALL", "Small Prop", "Small environment prop (tight budgets)"),
+            ("HERO_PROP", "Hero Prop", "Close-up prop (higher budgets)"),
+            ("MODULAR", "Modular", "Modular kit piece (grid/scale rules)")
+        ],
+        default="PROP_SMALL"
+    )  #type: ignore
 
 
 def ensure_active_mesh_object() -> bt.Object:
@@ -74,6 +90,9 @@ class AF_PT_panel(bt.Panel):
         layout: bt.UILayout = self.layout
         settings: AF_Settings = context.scene.af
 
+        box = layout.box()
+        box.label(text="Profile", icon="PREFERENCES")
+        box.prop(settings, "asset_type", text="")
         layout.prop(settings, "export_dir")
         layout.separator()
         layout.operator("af.export", text="Export Asset")
