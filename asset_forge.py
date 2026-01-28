@@ -89,10 +89,11 @@ class AF_PT_panel(bt.Panel):
     def draw(self, context):
         layout: bt.UILayout = self.layout
         settings: AF_Settings = context.scene.af
+        
+        layout.use_property_split = True
+        layout.use_property_decorate = True
 
-        box = layout.box()
-        box.label(text="Profile", icon="PREFERENCES")
-        box.prop(settings, "asset_type", text="")
+        layout.prop(settings, "asset_type")
         layout.prop(settings, "export_dir")
         layout.separator()
         layout.operator("af.export", text="Export Asset")
