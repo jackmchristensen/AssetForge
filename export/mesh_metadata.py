@@ -3,6 +3,7 @@ import datetime
 
 from bpy import types as bt
 from typing import Any
+from ..validation import validate_mesh
 
 
 def get_evaluated_mesh_stats(obj: bt.Object, context: bt.Context) -> dict[str, int]:
@@ -40,6 +41,7 @@ def generate_metadata(obj: bt.Object, export_path: str, context: bt.Context) -> 
     Builds a JSON-serializable metadata dictionary containing source
     information, export settings, and evaluated mesh statistics.
     """
+
     stats: dict[str, int] = get_evaluated_mesh_stats(obj, context)
 
     return {
@@ -55,5 +57,5 @@ def generate_metadata(obj: bt.Object, export_path: str, context: bt.Context) -> 
                 "%Y-%m-%dT:%H:%M:%SZ%z"
             ),
         },
-        "mesh": {"name": obj.name, "stats": stats},
+        "mesh": {"name": obj.name, "stats": stats}
     }

@@ -5,6 +5,7 @@ from bpy import types as bt
 from typing import Any
 
 from .export import mesh_exporter, mesh_metadata
+from .validation import validate_mesh
 
 
 class AF_Settings(bt.PropertyGroup):
@@ -48,6 +49,7 @@ class AF_OT_export(bt.Operator):
         data_export_path: str = os.path.join(export_dir, obj_data)
 
         mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, data_export_path, bpy.context)
+        mesh_data["validation"] = validate_mesh.generate_validation_data(obj)
 
         try:
             mesh_exporter.export_active_mesh_fbx(object_export_path)
