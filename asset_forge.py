@@ -48,7 +48,7 @@ class AF_OT_export(bt.Operator):
         obj_data: str = f"{obj.name}.json"
         data_export_path: str = os.path.join(export_dir, obj_data)
 
-        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, data_export_path, bpy.context)
+        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, bpy.context)
         mesh_data["validation"] = validate_mesh.generate_validation_data(obj)
 
         try:
