@@ -16,7 +16,7 @@ class ValidationRule:
 
 def validate_mesh_uv(obj: bpy.types.Object) -> bool:
     """Return true if object has UVs"""
-    
+
     return obj.type == "MESH" and bool(obj.data.uv_layers)
 
 
@@ -84,7 +84,7 @@ def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
             warnings.append(item)
 
     return {
-        "passed": len(rules) == 0,
+        "passed": len(errors) == 0,
         "errors": errors,
         "warnings": warnings,
     }
