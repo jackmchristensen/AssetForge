@@ -53,7 +53,18 @@ def validate_mesh_manifold(obj: bpy.types.Object) -> bool:
             bpy.ops.object.mode_set(mode=prev_mode)
 
 
+def validate_mesh_materials(obj: bpy.types.Object) -> bool:
+    """Return true if object has materials"""
+
+    return obj.type == "MESH" and bool(obj.data.materials)
+
+
 def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
+    """Validates mesh and returns any errors or warnings.
+    
+    Mesh can pass with warnings but will fail to pass if any errors are found.
+    """
+
     rules: list[ValidationRule] = [
         ValidationRule(
             code="MISSING_UV",
@@ -66,6 +77,12 @@ def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
             message="Mesh has non-manifold geometry.",
             severity="error",
             check=validate_mesh_manifold
+        ),
+        ValidationRule(
+            code="MISSING_MATERIALS",
+            message="Mesh has no materials assigned to it.",
+            severity="warning",
+            check=validate_mesh_materials
         )
     ]
 
