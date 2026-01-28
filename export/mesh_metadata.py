@@ -38,6 +38,7 @@ def _get_shader_connected_to_output(mat: bt.Material):
     """Returns Principled BSDF node.
     
     Currently returns first found Principled BSDF node
+    
     TODO Check if Principled BSDF node is connected to output node. Return nothing if not or doesn't exist.
     """
     tree = mat.node_tree
@@ -51,7 +52,8 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
     Returns constant value if no nodes are used.
     If image texture is used returns image's path and color space.
     If another node is used returns 'complex' type and no other data.
-    TODO Normal map special case (includes intermediary node)
+    
+    TODO Normal map image texture special case (includes intermediary node)
     """
 
     if not sock.is_linked:
