@@ -16,6 +16,8 @@ if _needs_reload:
         mesh_metadata = importlib.reload(mesh_metadata)
         mesh_exporter = importlib.reload(mesh_exporter)
         validate_mesh = importlib.reload(validate_mesh)
+        error_checks = importlib.reload(error_checks)
+        warning_checks = importlib.reload(warning_checks)
 
 import bpy
 
@@ -23,7 +25,11 @@ from .export import (
     mesh_exporter,
     mesh_metadata
 )
-from .validation import validate_mesh
+from .validation import (
+    error_checks,
+    validate_mesh,
+    warning_checks
+)
 from . import (
     asset_forge
 )
