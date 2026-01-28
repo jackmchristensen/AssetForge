@@ -52,8 +52,6 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
     Returns constant value if no nodes are used.
     If image texture is used returns image's path and color space.
     If another node is used returns 'complex' type and no other data.
-    
-    TODO Normal map image texture special case (includes intermediary node)
     """
 
     if not sock.is_linked:
@@ -63,7 +61,7 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
             val = sock.default_value
         return { "type": "constant", "value": val }
     
-    from_node = sock.links[0].from_node
+    from_node: bt.Node = sock.links[0].from_node
 
     if from_node.type == "TEX_IMAGE" and from_node.image:
         image = from_node.image
@@ -73,6 +71,19 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
             "color_space": image.colorspace_settings.name
         }
     
+    if from_node.type == "NORMAL_MAP":
+        color_input = from_node.inputs.get("Color")
+        if color_input and color_input.is_linked:
+            texture = color_input.links[0].from_node
+            if texture.type == "TEX_IMAGE":
+                image = texture.image
+                return {
+                    "type": "texture",
+                    "usage": "normal",
+                    "path": bpy.path.abspath(image.filepath),
+                    "color_space": image.colorspace_settings.name
+                }
+
     return { "type": "complex" }
 
 
