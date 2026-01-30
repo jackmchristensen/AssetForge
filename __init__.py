@@ -34,7 +34,7 @@ from . import (
     asset_forge
 )
 
-classes = (asset_forge.AF_OT_export, asset_forge.AF_PT_panel, asset_forge.AF_Settings)
+classes = (asset_forge.AF_OT_export, asset_forge.AF_PT_panel, asset_forge.AF_Settings, asset_forge.AF_PT_Settings)
 
 def register():
     for cls in classes:

@@ -3,14 +3,42 @@ import bpy
 
 from bpy import types as bt
 from typing import Any
+from pathlib import Path
 
 from .export import mesh_exporter, mesh_metadata
 from .validation import validate_mesh
 
+def uasset_to_game_path(uasset_file: str, uproject_file: str) -> str:
+    if not uproject_file:
+        raise ValueError("Select a UE .uproject first.")
+    
+    uproject = Path(uproject_file).expanduser().resolve()
+    if uproject.suffix.lower() != ".uproject":
+        raise ValueError("UE Project must be a .uproject file.")
+    
+    project_root = uproject.parent
+    content_root = (project_root / "Content").resolve()
+
+    uasset = Path(uasset_file).expanduser().resolve()
+    if uasset.suffix.lower() != ".uasset":
+        raise ValueError("Master material must be a .uasset file.")
+
+    try:
+        rel = uasset.relative_to(content_root)
+    except:
+        raise ValueError(
+            "Selected .uasset is not inside this project's Content folder.\n"
+            f"Content: {content_root}\n"
+            f"Asset:   {uasset}"
+        )
+
+    rel_no_ext = rel.with_suffix("")
+    return "/Game/" + rel_no_ext.as_posix()
+
+
 def update_export_dir(self, context):
     if self.export_dir:
         self.export_dir = bpy.path.abspath(self.export_dir)
-
 
 class AF_Settings(bt.PropertyGroup):
     """User-configurable export settings for Asset Forge."""
@@ -23,11 +51,18 @@ class AF_Settings(bt.PropertyGroup):
         update=update_export_dir
     ) # type: ignore
 
-    engine_dir: bpy.props.StringProperty(
-        name="UE Project Folder",
-        description="Folder containing Unreal Engine project to export to.",
-        subtype="DIR_PATH",
-        default=""
+    ue_project_path: bpy.props.StringProperty(
+        name="UE Project File",
+        description="Unreal Project you want to export the asset to.",
+        subtype="FILE_PATH",
+        default="",
+    ) # type: ignore
+
+    material_path: bpy.props.StringProperty(
+        name="UE Master Material Path",
+        description="Master material used to make material instance from.",
+        subtype="FILE_PATH",
+        default="",
     ) # type: ignore
 
     asset_type: bpy.props.EnumProperty(
@@ -63,6 +98,11 @@ class AF_OT_export(bt.Operator):
     def execute(self, context: bt.Context):
         settings: AF_Settings = context.scene.af
         export_dir: str = bpy.path.abspath(settings.export_dir)
+        ue_project_path: str = bpy.path.abspath(settings.ue_project_path)
+        try:
+            ue_material_path = uasset_to_game_path(settings.material_path, settings.ue_project_path)
+        except:
+            ue_material_path = ""
 
         obj: bt.Object = ensure_active_mesh_object()
         filename: str = f"{obj.name}.fbx"
@@ -71,7 +111,7 @@ class AF_OT_export(bt.Operator):
         obj_data: str = f"{obj.name}.json"
         data_export_path: str = os.path.join(export_dir, obj_data)
 
-        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, bpy.context)
+        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, ue_project_path, ue_material_path, bpy.context)
         mesh_data["validation"] = validate_mesh.generate_validation_data(obj)
 
         try:
@@ -102,6 +142,25 @@ class AF_PT_panel(bt.Panel):
 
         layout.prop(settings, "asset_type")
         layout.prop(settings, "export_dir")
-        layout.prop(settings, "engine_dir")
+        layout.separator()
+        layout.prop(settings, "ue_project_path")
+        layout.prop(settings, "material_path")
         layout.separator()
         layout.operator("af.export", text="Export Asset")
+        
+class AF_PT_Settings(bt.Panel):
+    bl_label = "Settings"
+    bl_idname = "AF_PT_settings"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Asset Forge"
+
+    # This is the magic line:
+    bl_parent_id = "AF_PT_panel"
+
+    # Optional: makes it collapsed by default (still user-toggleable)
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        settings = context.scene.af
