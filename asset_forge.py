@@ -21,7 +21,14 @@ class AF_Settings(bt.PropertyGroup):
         subtype="DIR_PATH",
         default="",
         update=update_export_dir
-    )  # type: ignore
+    ) # type: ignore
+
+    engine_dir: bpy.props.StringProperty(
+        name="UE Project Folder",
+        description="Folder containing Unreal Engine project to export to.",
+        subtype="DIR_PATH",
+        default=""
+    ) # type: ignore
 
     asset_type: bpy.props.EnumProperty(
         name="Asset Type",
@@ -32,7 +39,7 @@ class AF_Settings(bt.PropertyGroup):
             ("MODULAR", "Modular", "Modular kit piece (grid/scale rules)")
         ],
         default="PROP_SMALL"
-    )  #type: ignore
+    ) # type: ignore
 
 
 def ensure_active_mesh_object() -> bt.Object:
@@ -95,5 +102,6 @@ class AF_PT_panel(bt.Panel):
 
         layout.prop(settings, "asset_type")
         layout.prop(settings, "export_dir")
+        layout.prop(settings, "engine_dir")
         layout.separator()
         layout.operator("af.export", text="Export Asset")
