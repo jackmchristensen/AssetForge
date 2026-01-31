@@ -111,10 +111,10 @@ class AF_OT_export(bt.Operator):
         obj_data: str = f"{obj.name}.json"
         data_export_path: str = os.path.join(export_dir, obj_data)
 
-        ue_assets_dir: str = "/Game/" + settings.assets_dir + "/"
+        ue_assets_dir: str = f"/Game/{settings.assets_dir}/"
         master_mat_path: str = ""
         if settings.ue_master_material != "":
-            master_mat_path = "/Game/" + settings.materials_dir + "/" + settings.ue_master_material
+            master_mat_path = f"/Game/{settings.materials_dir}/{settings.ue_master_material}"
 
         mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, ue_project_path, ue_assets_dir, master_mat_path, bpy.context)
         mesh_data["validation"] = validate_mesh.generate_validation_data(obj)
