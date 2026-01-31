@@ -27,7 +27,7 @@ def _load_first(imported_paths: list[str]):
     return None
 
 
-def _import_fbx(fbx_path: str, mesh_folder: str):
+def _import_fbx(fbx_path: str, mesh_folder: str) -> unreal.StaticMesh:
     imported_mesh_paths = _import_file(fbx_path, mesh_folder)
     mesh_asset = _load_first(imported_mesh_paths)
 
@@ -35,6 +35,42 @@ def _import_fbx(fbx_path: str, mesh_folder: str):
         raise RuntimeError(f"Expected a StaticMesh import; got {type(mesh_asset)} from {imported_mesh_paths}")
     
     return mesh_asset
+
+
+def _import_textures(manifest_data, texture_destination_folder: str) -> None:
+    """Checks if a material parameter uses an image texture and imports the texture into Unreal project if it exists.
+    
+    Takes the JSON file containing material data and the destination folder as inputs.
+    """
+
+    texture_lookup_by_path: dict[str, unreal.Texture] = {}
+    for mat in manifest_data.get("materials", []):
+        for parameters in mat.get("parameters"):
+            slot = mat.get(parameters)
+            if not slot or slot.get("type") != "texture":
+                continue
+
+            tex_path = slot.get("path")
+            p = Path(tex_path)
+            
+            # Possible for texture to not have a path. For example, if you are texture
+            # painting in Blender you can save the texture in the Blender scene without
+            # saving texture to disk.
+            if not p.exists():
+                unreal.log_warning(f"Texture missing on disk: {tex_path}")
+                continue
+
+            # Skip if texture already imported to Unreal Engine
+            if tex_path in texture_lookup_by_path:
+                continue
+
+            imported_tex_paths = _import_file(tex_path, texture_destination_folder)
+            tex_asset = _load_first(imported_tex_paths)
+
+            if isinstance(tex_asset, unreal.Texture):
+                texture_lookup_by_path[tex_path] = tex_asset
+            else:
+                unreal.log_warning(f"Imported non-texture from {tex_path}: {imported_tex_paths}")
 
 
 def ingest_asset(json_path: str) -> None:
@@ -70,5 +106,6 @@ def ingest_asset(json_path: str) -> None:
     unreal.EditorAssetLibrary.save_loaded_asset(mesh_asset)
     unreal.log(f"[Ingest] Done: {asset_name} -> {base_folder}")
 
-    # TODO import textures
+    _import_textures(data, tex_folder)
+
     # TODO create material instances
