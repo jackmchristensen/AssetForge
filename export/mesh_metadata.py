@@ -102,13 +102,16 @@ def get_material_data(obj: bt.Object) -> list[dict[str, Any]]:
         alpha               = shader.inputs.get("Alpha")
 
         mat_data: dict[str, Any] = { "name": mat.material.name }
+        parameters: dict[str, Any] = {}
 
-        mat_data["base_color"]      = _classify_shader_input(base_color)
-        mat_data["roughness"]       = _classify_shader_input(roughness)
-        mat_data["metallic"]        = _classify_shader_input(metallic)
-        mat_data["normal"]          = _classify_shader_input(normal)
-        mat_data["emission_color"]  = _classify_shader_input(emission_color)
-        mat_data["alpha"]           = _classify_shader_input(alpha)
+        parameters["base_color"]      = _classify_shader_input(base_color)
+        parameters["roughness"]       = _classify_shader_input(roughness)
+        parameters["metallic"]        = _classify_shader_input(metallic)
+        parameters["normal"]          = _classify_shader_input(normal)
+        parameters["emission_color"]  = _classify_shader_input(emission_color)
+        parameters["alpha"]           = _classify_shader_input(alpha)
+
+        mat_data["parameters"] = parameters
 
         materials.append(mat_data)
         
