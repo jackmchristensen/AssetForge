@@ -14,7 +14,7 @@ def _import_file(filepath: str, destination: str) -> list[str]:
     task.set_editor_property("replace_existing", True)
     task.set_editor_property("save", True)
 
-    unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(task)
+    unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
     return list(task.get_editor_property("imported_object_paths") or [])
 
 
@@ -37,7 +37,7 @@ def _import_fbx(fbx_path: str, mesh_folder: str) -> unreal.StaticMesh:
     return mesh_asset
 
 
-def _import_textures(manifest_data, texture_destination_folder: str) -> None:
+def _import_textures(manifest_data, texture_destination_folder: str) -> dict[str, unreal.Texture]:
     """Checks if a material parameter uses an image texture and imports the texture into Unreal project if it exists.
     
     Takes the JSON file containing material data and the destination folder as inputs.
@@ -52,7 +52,6 @@ def _import_textures(manifest_data, texture_destination_folder: str) -> None:
 
             tex_path = slot.get("path")
             p = Path(tex_path)
-            
             # Possible for texture to not have a path. For example, if you are texture
             # painting in Blender you can save the texture in the Blender scene without
             # saving texture to disk.
@@ -71,6 +70,8 @@ def _import_textures(manifest_data, texture_destination_folder: str) -> None:
                 texture_lookup_by_path[tex_path] = tex_asset
             else:
                 unreal.log_warning(f"Imported non-texture from {tex_path}: {imported_tex_paths}")
+        
+    return texture_lookup_by_path
 
 
 def ingest_asset(json_path: str) -> None:
@@ -106,6 +107,6 @@ def ingest_asset(json_path: str) -> None:
     unreal.EditorAssetLibrary.save_loaded_asset(mesh_asset)
     unreal.log(f"[Ingest] Done: {asset_name} -> {base_folder}")
 
-    _import_textures(data, tex_folder)
+    texture_lookup_by_path: dict[str, unreal.Texture] = _import_textures(data, tex_folder)
 
     # TODO create material instances
