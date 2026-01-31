@@ -58,11 +58,22 @@ class AF_Settings(bt.PropertyGroup):
         default="",
     ) # type: ignore
 
-    material_path: bpy.props.StringProperty(
-        name="UE Master Material Path",
-        description="Master material used to make material instance from.",
-        subtype="FILE_PATH",
+    ue_master_material: bpy.props.StringProperty(
+        name="Master Material",
+        description="Unreal master material you want to instance.\nLeave blank if you do not want to instance a material.",
         default="",
+    ) # type: ignore
+
+    materials_dir: bpy.props.StringProperty(
+        name="Materials Folder",
+        description="The folder in your Unreal Engine project where materials are stored.",
+        default="Materials"
+    ) # type: ignore
+
+    assets_dir: bpy.props.StringProperty(
+        name="Assets Folder",
+        description="The folder in your Unreal Engine project where assets are stored.",
+        default="Assets"
     ) # type: ignore
 
     asset_type: bpy.props.EnumProperty(
@@ -75,6 +86,25 @@ class AF_Settings(bt.PropertyGroup):
         ],
         default="PROP_SMALL"
     ) # type: ignore
+
+    mesh_prefix: bpy.props.StringProperty(
+        name="Mesh Prefix",
+        description="Prefix used to denote static mesh assets.",
+        default="SM_"
+    ) # type: ignore
+
+    texture_prefix: bpy.props.StringProperty(
+        name="Texture Prefix",
+        description="Prefix used to denote image texture files.",
+        default="T_"
+    ) # type: ignore
+
+    material_prefix: bpy.props.StringProperty(
+        name="Master Material Prefix",
+        description="Prefix used to denote master materials.",
+        default="M_"
+    ) # type: ignore
+
 
 
 def ensure_active_mesh_object() -> bt.Object:
@@ -99,10 +129,6 @@ class AF_OT_export(bt.Operator):
         settings: AF_Settings = context.scene.af
         export_dir: str = bpy.path.abspath(settings.export_dir)
         ue_project_path: str = bpy.path.abspath(settings.ue_project_path)
-        try:
-            ue_material_path = uasset_to_game_path(settings.material_path, settings.ue_project_path)
-        except:
-            ue_material_path = ""
 
         obj: bt.Object = ensure_active_mesh_object()
         filename: str = f"{obj.name}.fbx"
@@ -111,7 +137,12 @@ class AF_OT_export(bt.Operator):
         obj_data: str = f"{obj.name}.json"
         data_export_path: str = os.path.join(export_dir, obj_data)
 
-        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, ue_project_path, ue_material_path, bpy.context)
+        ue_assets_dir: str = "/Game/" + settings.assets_dir + "/"
+        master_mat_path: str = ""
+        if settings.ue_master_material != "":
+            master_mat_path = "/Game/" + settings.materials_dir + "/" + settings.ue_master_material
+
+        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, ue_project_path, ue_assets_dir, master_mat_path, bpy.context)
         mesh_data["validation"] = validate_mesh.generate_validation_data(obj)
 
         try:
@@ -143,10 +174,12 @@ class AF_PT_panel(bt.Panel):
         layout.prop(settings, "asset_type")
         layout.prop(settings, "export_dir")
         layout.separator()
+        layout.label(text="Unreal Engine Info:")
         layout.prop(settings, "ue_project_path")
-        layout.prop(settings, "material_path")
+        layout.prop(settings, "ue_master_material")
         layout.separator()
         layout.operator("af.export", text="Export Asset")
+
         
 class AF_PT_Settings(bt.Panel):
     bl_label = "Settings"
@@ -154,13 +187,21 @@ class AF_PT_Settings(bt.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Asset Forge"
-
-    # This is the magic line:
     bl_parent_id = "AF_PT_panel"
-
-    # Optional: makes it collapsed by default (still user-toggleable)
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
         settings = context.scene.af
+
+        layout.use_property_split = True
+        layout.use_property_decorate = True
+
+        layout.label(text="Unreal Engine Project Structure:")
+        layout.prop(settings, "assets_dir")
+        layout.prop(settings, "materials_dir")
+        layout.separator()
+        layout.label(text="Naming Structure:")
+        layout.prop(settings, "mesh_prefix")
+        layout.prop(settings, "texture_prefix")
+        layout.prop(settings, "material_prefix")
