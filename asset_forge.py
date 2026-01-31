@@ -1,8 +1,10 @@
 import os
 import bpy
 import subprocess
+
 from bpy import types as bt
 from typing import Any
+from pathlib import Path
 
 from .export import mesh_exporter, mesh_metadata
 from .validation import validate_mesh
@@ -126,16 +128,18 @@ class AF_OT_export(bt.Operator):
             self.report({"ERROR"}, str(e))
             return {"CANCELLED"}
         
+        p = Path(__file__).resolve().parent
+        engine_script = str(p / "engine" / "ue_import.py")
+        
         subprocess.Popen([
-            "/home/jchristensen/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor",
-            settings.ue_project_path,
-            "-ExecutePythonScript=/home/jchristensen/.config/blender/5.0/scripts/addons/asset_forge/engine/ue_import.py",
+            f"/home/jchristensen/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor {settings.ue_project_path}",
+            f"-ExecutePythonScript={engine_script}",
             f"-manifest={settings.export_dir}/{obj.name}.json",
             "-unattended -nop4 -nosplash -stdout -FullStdOutLogOutput -log"
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            start_new_session=True,  # Linux: detach from Blender session
+            start_new_session=True,
             close_fds=True,
             env=os.environ.copy(),
         )
