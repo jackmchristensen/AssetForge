@@ -1,5 +1,6 @@
 import unreal
 import json
+import re
 from pathlib import Path
 
 def _ensure_folder(path: str) -> None:
@@ -28,7 +29,23 @@ def _load_first(imported_paths: list[str]):
 
 
 def _import_fbx(fbx_path: str, mesh_folder: str) -> unreal.StaticMesh:
-    imported_mesh_paths = _import_file(fbx_path, mesh_folder)
+    task = unreal.AssetImportTask()
+    task.set_editor_property("filename", fbx_path)
+    task.set_editor_property("destination_path", mesh_folder)
+    task.set_editor_property("automated", True)
+    task.set_editor_property("replace_existing", True)
+    task.set_editor_property("save", True)
+
+    ui = unreal.FbxImportUI()
+    ui.set_editor_property("import_as_skeletal", False)
+    ui.set_editor_property("import_mesh", True)
+    ui.set_editor_property("import_materials", False)
+    ui.set_editor_property("import_textures", False) 
+    task.set_editor_property("options", ui)
+
+    unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+
+    imported_mesh_paths = list(task.get_editor_property("imported_object_paths") or [])
     mesh_asset = _load_first(imported_mesh_paths)
 
     if not isinstance(mesh_asset, unreal.StaticMesh):
@@ -45,8 +62,8 @@ def _import_textures(manifest_data, texture_destination_folder: str) -> dict[str
 
     texture_lookup_by_path: dict[str, unreal.Texture] = {}
     for mat in manifest_data.get("materials", []):
-        for parameters in mat.get("parameters"):
-            slot = mat.get(parameters)
+        params = mat.get("parameters", {})
+        for _, slot in params.items():
             if not slot or slot.get("type") != "texture":
                 continue
 
@@ -88,7 +105,7 @@ def ingest_asset(json_path: str) -> None:
         raise FileNotFoundError(f"FBX not found: {fbx_path}")
 
     ue_config = data.get("unreal", {})
-    DEST_ROOT = ue_config.get("ue_assets_dir", "/Game/Assets/")
+    DEST_ROOT = ue_config.get("ue_assets_directory", "/Game/Assets")
     MASTER_MAT_PATH = ue_config.get("ue_master_material", "")
 
     base_folder = f"{DEST_ROOT}/{asset_name}"
@@ -110,3 +127,28 @@ def ingest_asset(json_path: str) -> None:
     texture_lookup_by_path: dict[str, unreal.Texture] = _import_textures(data, tex_folder)
 
     # TODO create material instances
+
+
+def get_cli_value(name: str) -> str | None:
+    cmd = unreal.SystemLibrary.get_command_line()
+    m = re.search(rf'(?:^|\s)-{re.escape(name)}=(?:"([^"]+)"|(\S+))', cmd)
+    if not m:
+        return None
+    return m.group(1) or m.group(2)
+
+
+def main() -> int:
+    manifest_path = get_cli_value("manifest")
+    if not manifest_path:
+        unreal.log_error("Missing required argument: -manifest=/absolute/path/to/file.json")
+        return 2
+
+    unreal.log(f"[AssetForge] manifest: {manifest_path}")
+
+    ingest_asset(manifest_path)
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

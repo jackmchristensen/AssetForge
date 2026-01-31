@@ -1,9 +1,8 @@
 import os
 import bpy
-
+import subprocess
 from bpy import types as bt
 from typing import Any
-from pathlib import Path
 
 from .export import mesh_exporter, mesh_metadata
 from .validation import validate_mesh
@@ -111,7 +110,7 @@ class AF_OT_export(bt.Operator):
         obj_data: str = f"{obj.name}.json"
         data_export_path: str = os.path.join(export_dir, obj_data)
 
-        ue_assets_dir: str = f"/Game/{settings.assets_dir}/"
+        ue_assets_dir: str = f"/Game/{settings.assets_dir}"
         master_mat_path: str = ""
         if settings.ue_master_material != "":
             master_mat_path = f"/Game/{settings.materials_dir}/{settings.ue_master_material}"
@@ -126,6 +125,20 @@ class AF_OT_export(bt.Operator):
         except Exception as e:
             self.report({"ERROR"}, str(e))
             return {"CANCELLED"}
+        
+        subprocess.Popen([
+            "/home/jchristensen/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor",
+            settings.ue_project_path,
+            "-ExecutePythonScript=/home/jchristensen/.config/blender/5.0/scripts/addons/asset_forge/engine/ue_import.py",
+            f"-manifest={settings.export_dir}/{obj.name}.json",
+            "-unattended -nop4 -nosplash -stdout -FullStdOutLogOutput -log"
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,  # Linux: detach from Blender session
+            close_fds=True,
+            env=os.environ.copy(),
+        )
 
         self.report({"INFO"}, f"Exported: {object_export_path}")
         return {"FINISHED"}
