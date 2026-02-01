@@ -146,13 +146,11 @@ class AF_OT_export(bt.Operator):
         try:
             mesh_exporter.export_active_mesh_fbx(object_export_path)
             mesh_exporter.export_mesh_metadata(data_export_path, mesh_data)
-
+            run_ue_import(obj.name, context)
         except Exception as e:
             self.report({"ERROR"}, str(e))
             return {"CANCELLED"}
-        
-        run_ue_import(obj.name, context)
-
+    
         self.report({"INFO"}, f"Exported: {object_export_path}")
         return {"FINISHED"}
 
