@@ -95,6 +95,29 @@ def ensure_active_mesh_object() -> bt.Object:
     return obj
 
 
+def run_ue_import(obj_name: str, context: bt.Context) -> None:
+    settings: AF_Settings = context.scene.af
+
+    p = Path(__file__).resolve().parent
+    engine_script = str(p / "engine" / "ue_import.py")
+    export_dir: str = bpy.path.abspath(settings.export_dir)
+    project_path: str = bpy.path.abspath(settings.ue_project_path)
+    
+    subprocess.Popen([
+        f"/home/jchristensen/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor",
+        f"{project_path}",
+        f"-ExecutePythonScript={engine_script}",
+        f"-manifest={export_dir}/{obj_name}.json",
+        "-unattended -nop4 -nosplash -stdout -FullStdOutLogOutput -log"
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+        close_fds=True,
+        env=os.environ.copy(),
+    )
+
+
 class AF_OT_export(bt.Operator):
     bl_idname: str  = "af.export"
     bl_label: str   = "Export Active Mesh (FBX)"
@@ -128,21 +151,7 @@ class AF_OT_export(bt.Operator):
             self.report({"ERROR"}, str(e))
             return {"CANCELLED"}
         
-        p = Path(__file__).resolve().parent
-        engine_script = str(p / "engine" / "ue_import.py")
-        
-        subprocess.Popen([
-            f"/home/jchristensen/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor {settings.ue_project_path}",
-            f"-ExecutePythonScript={engine_script}",
-            f"-manifest={settings.export_dir}/{obj.name}.json",
-            "-unattended -nop4 -nosplash -stdout -FullStdOutLogOutput -log"
-            ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-            close_fds=True,
-            env=os.environ.copy(),
-        )
+        run_ue_import(obj.name, context)
 
         self.report({"INFO"}, f"Exported: {object_export_path}")
         return {"FINISHED"}
