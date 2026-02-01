@@ -3,6 +3,7 @@ import json
 import re
 from pathlib import Path
 
+
 def _ensure_folder(path: str) -> None:
     unreal.EditorAssetLibrary.make_directory(path)
 
@@ -24,7 +25,7 @@ def _load_first(imported_paths: list[str]):
         asset = unreal.load_asset(p)
         if asset:
             return asset
-        
+
     return None
 
 
@@ -40,7 +41,7 @@ def _import_fbx(fbx_path: str, mesh_folder: str) -> unreal.StaticMesh:
     ui.set_editor_property("import_as_skeletal", False)
     ui.set_editor_property("import_mesh", True)
     ui.set_editor_property("import_materials", False)
-    ui.set_editor_property("import_textures", False) 
+    ui.set_editor_property("import_textures", False)
     task.set_editor_property("options", ui)
 
     unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
@@ -49,14 +50,16 @@ def _import_fbx(fbx_path: str, mesh_folder: str) -> unreal.StaticMesh:
     mesh_asset = _load_first(imported_mesh_paths)
 
     if not isinstance(mesh_asset, unreal.StaticMesh):
-        raise RuntimeError(f"Expected a StaticMesh import; got {type(mesh_asset)} from {imported_mesh_paths}")
-    
+        raise RuntimeError(
+            f"Expected a StaticMesh import; got {type(mesh_asset)} from {imported_mesh_paths}"
+        )
+
     return mesh_asset
 
 
 def _import_textures(manifest_data, texture_destination_folder: str) -> dict[str, unreal.Texture]:
     """Checks if a material parameter uses an image texture and imports the texture into Unreal project if it exists.
-    
+
     Takes the JSON file containing material data and the destination folder as inputs.
     """
 
@@ -86,8 +89,10 @@ def _import_textures(manifest_data, texture_destination_folder: str) -> dict[str
             if isinstance(tex_asset, unreal.Texture):
                 texture_lookup_by_path[tex_path] = tex_asset
             else:
-                unreal.log_warning(f"Imported non-texture from {tex_path}: {imported_tex_paths}")
-        
+                unreal.log_warning(
+                    f"Imported non-texture from {tex_path}: {imported_tex_paths}"
+                )
+
     return texture_lookup_by_path
 
 
@@ -95,14 +100,14 @@ def ingest_asset(json_path: str) -> None:
     """Imports asset and image textures to Unreal Editor and creates material instances if materials
     are assigned in Blender and a master material is selected.
 
-    Does not use FBX default import settings so only the mesh gets imported automatically. Other assets 
+    Does not use FBX default import settings so only the mesh gets imported automatically. Other assets
     get imported manually.
-    """"
-    
+    """
+
     manifest_path = Path(json_path)
     if not manifest_path.exists():
         raise FileNotFoundError(f"Manifest not found: {json_path}.")
-    
+
     data = json.loads(manifest_path.read_text())
 
     asset_name = data["source"]["object_name"]
@@ -117,19 +122,21 @@ def ingest_asset(json_path: str) -> None:
 
     base_folder = f"{DEST_ROOT}/{asset_name}"
     mesh_folder = f"{base_folder}/Mesh"
-    tex_folder  = f"{base_folder}/Textures"
-    mat_folder  = f"{base_folder}/Materials"
+    tex_folder = f"{base_folder}/Textures"
+    mat_folder = f"{base_folder}/Materials"
 
     _ensure_folder(mesh_folder)
     _ensure_folder(tex_folder)
     _ensure_folder(mat_folder)
-    
+
     mesh_asset = _import_fbx(fbx_path, mesh_folder)
 
     unreal.EditorAssetLibrary.save_loaded_asset(mesh_asset)
     unreal.log(f"[Ingest] Done: {asset_name} -> {base_folder}")
 
-    texture_lookup_by_path: dict[str, unreal.Texture] = _import_textures(data, tex_folder)
+    texture_lookup_by_path: dict[str, unreal.Texture] = _import_textures(
+        data, tex_folder
+    )
 
     # TODO create material instances
     parent_mat = unreal.load_asset(MASTER_MAT_PATH)
@@ -146,7 +153,9 @@ def get_cli_value(name: str) -> str | None:
 def main() -> int:
     manifest_path = get_cli_value("manifest")
     if not manifest_path:
-        unreal.log_error("Missing required argument: -manifest=/absolute/path/to/file.json")
+        unreal.log_error(
+            "Missing required argument: -manifest=/absolute/path/to/file.json"
+        )
         return 2
 
     unreal.log(f"[AssetForge] manifest: {manifest_path}")
