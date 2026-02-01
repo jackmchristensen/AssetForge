@@ -92,6 +92,13 @@ def _import_textures(manifest_data, texture_destination_folder: str) -> dict[str
 
 
 def ingest_asset(json_path: str) -> None:
+    """Imports asset and image textures to Unreal Editor and creates material instances if materials
+    are assigned in Blender and a master material is selected.
+
+    Does not use FBX default import settings so only the mesh gets imported automatically. Other assets 
+    get imported manually.
+    """"
+    
     manifest_path = Path(json_path)
     if not manifest_path.exists():
         raise FileNotFoundError(f"Manifest not found: {json_path}.")
