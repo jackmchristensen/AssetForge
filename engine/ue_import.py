@@ -116,8 +116,6 @@ def ingest_asset(json_path: str) -> None:
     _ensure_folder(mesh_folder)
     _ensure_folder(tex_folder)
     _ensure_folder(mat_folder)
-
-    parent_mat = unreal.load_asset(MASTER_MAT_PATH)
     
     mesh_asset = _import_fbx(fbx_path, mesh_folder)
 
@@ -127,6 +125,7 @@ def ingest_asset(json_path: str) -> None:
     texture_lookup_by_path: dict[str, unreal.Texture] = _import_textures(data, tex_folder)
 
     # TODO create material instances
+    parent_mat = unreal.load_asset(MASTER_MAT_PATH)
 
 
 def get_cli_value(name: str) -> str | None:
