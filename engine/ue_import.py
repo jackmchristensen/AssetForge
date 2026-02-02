@@ -97,7 +97,7 @@ def ingest_asset(json_path: str) -> None:
 
     Does not use FBX default import settings so only the mesh gets imported automatically. Other assets 
     get imported manually.
-    """"
+    """
     
     manifest_path = Path(json_path)
     if not manifest_path.exists():
