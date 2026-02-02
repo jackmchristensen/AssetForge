@@ -6,13 +6,11 @@ from bpy import types as bt
 from typing import Any
 from pathlib import Path
 
-from bpy.stub_internal.rna_enums import OperatorReturnItems
-
 from .export import mesh_exporter, mesh_metadata
 from .validation import validate_mesh
 
 
-def update_export_dir(self) -> None:
+def update_export_dir(self, context):
     if self.export_dir:
         self.export_dir = bpy.path.abspath(self.export_dir)
 
@@ -25,33 +23,33 @@ class AF_Settings(bt.PropertyGroup):
         description="Folder to export FBX files to.\nSupports relative paths using '//'.",
         subtype="DIR_PATH",
         default="",
-        update=update_export_dir,
-    )  # type: ignore
+        update=update_export_dir
+    ) # type: ignore
 
     ue_project_path: bpy.props.StringProperty(
         name="UE Project File",
         description="Unreal Project you want to export the asset to.",
         subtype="FILE_PATH",
         default="",
-    )  # type: ignore
+    ) # type: ignore
 
     ue_master_material: bpy.props.StringProperty(
         name="Master Material",
         description="Unreal master material you want to instance.\nLeave blank if you do not want to instance a material.",
         default="",
-    )  # type: ignore
+    ) # type: ignore
 
     materials_dir: bpy.props.StringProperty(
         name="Materials Folder",
         description="The folder in your Unreal Engine project where materials are stored.",
-        default="Materials",
-    )  # type: ignore
+        default="Materials"
+    ) # type: ignore
 
     assets_dir: bpy.props.StringProperty(
         name="Assets Folder",
         description="The folder in your Unreal Engine project where assets are stored.",
-        default="Assets",
-    )  # type: ignore
+        default="Assets"
+    ) # type: ignore
 
     asset_type: bpy.props.EnumProperty(
         name="Asset Type",
@@ -59,28 +57,29 @@ class AF_Settings(bt.PropertyGroup):
         items=[
             ("PROP_SMALL", "Small Prop", "Small environment prop (tight budgets)"),
             ("HERO_PROP", "Hero Prop", "Close-up prop (higher budgets)"),
-            ("MODULAR", "Modular", "Modular kit piece (grid/scale rules)"),
+            ("MODULAR", "Modular", "Modular kit piece (grid/scale rules)")
         ],
-        default="PROP_SMALL",
-    )  # type: ignore
+        default="PROP_SMALL"
+    ) # type: ignore
 
     mesh_prefix: bpy.props.StringProperty(
         name="Mesh Prefix",
         description="Prefix used to denote static mesh assets.",
-        default="SM_",
-    )  # type: ignore
+        default="SM_"
+    ) # type: ignore
 
     texture_prefix: bpy.props.StringProperty(
         name="Texture Prefix",
         description="Prefix used to denote image texture files.",
-        default="T_",
-    )  # type: ignore
+        default="T_"
+    ) # type: ignore
 
     material_prefix: bpy.props.StringProperty(
         name="Master Material Prefix",
         description="Prefix used to denote master materials.",
-        default="M_",
-    )  # type: ignore
+        default="M_"
+    ) # type: ignore
+
 
 
 def ensure_active_mesh_object() -> bt.Object:
@@ -103,14 +102,13 @@ def run_ue_import(obj_name: str, context: bt.Context) -> None:
     engine_script = str(p / "engine" / "ue_import.py")
     export_dir: str = bpy.path.abspath(settings.export_dir)
     project_path: str = bpy.path.abspath(settings.ue_project_path)
-
-    subprocess.Popen(
-        [
-            "/home/jchristensen/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor",
-            f"{project_path}",
-            f"-ExecutePythonScript={engine_script}",
-            f"-manifest={export_dir}/{obj_name}.json",
-            "-unattended -nop4 -nosplash -stdout -FullStdOutLogOutput -log",
+    
+    subprocess.Popen([
+        f"/home/jchristensen/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor",
+        f"{project_path}",
+        f"-ExecutePythonScript={engine_script}",
+        f"-manifest={export_dir}/{obj_name}.json",
+        "-unattended -nop4 -nosplash -stdout -FullStdOutLogOutput -log"
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -121,11 +119,11 @@ def run_ue_import(obj_name: str, context: bt.Context) -> None:
 
 
 class AF_OT_export(bt.Operator):
-    bl_idname: str = "af.export"
-    bl_label: str = "Export Active Mesh (FBX)"
+    bl_idname: str  = "af.export"
+    bl_label: str   = "Export Active Mesh (FBX)"
     bl_options: set = {"REGISTER", "UNDO"}
 
-    def execute(self, context: bt.Context) -> set[OperatorReturnItems]:
+    def execute(self, context: bt.Context):
         settings: AF_Settings = context.scene.af
         export_dir: str = bpy.path.abspath(settings.export_dir)
         ue_project_path: str = bpy.path.abspath(settings.ue_project_path)
@@ -140,18 +138,9 @@ class AF_OT_export(bt.Operator):
         ue_assets_dir: str = f"/Game/{settings.assets_dir}"
         master_mat_path: str = ""
         if settings.ue_master_material != "":
-            master_mat_path = (
-                f"/Game/{settings.materials_dir}/{settings.ue_master_material}"
-            )
+            master_mat_path = f"/Game/{settings.materials_dir}/{settings.ue_master_material}"
 
-        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(
-            obj,
-            export_dir,
-            ue_project_path,
-            ue_assets_dir,
-            master_mat_path,
-            bpy.context,
-        )
+        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, ue_project_path, ue_assets_dir, master_mat_path, bpy.context)
         mesh_data["validation"] = validate_mesh.generate_validation_data(obj)
 
         try:
@@ -161,22 +150,22 @@ class AF_OT_export(bt.Operator):
         except Exception as e:
             self.report({"ERROR"}, str(e))
             return {"CANCELLED"}
-
+    
         self.report({"INFO"}, f"Exported: {object_export_path}")
         return {"FINISHED"}
 
 
 class AF_PT_panel(bt.Panel):
-    bl_label: str = "Asset Forge"
-    bl_idname: str = "AF_PT_panel"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category: str = "AssetForge"
+    bl_label: str       = "Asset Forge"
+    bl_idname: str      = "AF_PT_panel"
+    bl_space_type: str  = "VIEW_3D"
+    bl_region_type: str = "UI"
+    bl_category: str    = "AssetForge"
 
     def draw(self, context):
         layout: bt.UILayout = self.layout
         settings: AF_Settings = context.scene.af
-
+        
         layout.use_property_split = True
         layout.use_property_decorate = True
 
@@ -189,7 +178,7 @@ class AF_PT_panel(bt.Panel):
         layout.separator()
         layout.operator("af.export", text="Export Asset")
 
-
+        
 class AF_PT_Settings(bt.Panel):
     bl_label = "Settings"
     bl_idname = "AF_PT_settings"
@@ -197,10 +186,10 @@ class AF_PT_Settings(bt.Panel):
     bl_region_type = "UI"
     bl_category = "Asset Forge"
     bl_parent_id = "AF_PT_panel"
-    bl_options = {"DEFAULT_CLOSED"}
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        layout: bt.UILayout = self.layout
+        layout = self.layout
         settings = context.scene.af
 
         layout.use_property_split = True
