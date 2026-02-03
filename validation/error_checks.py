@@ -1,25 +1,29 @@
 import bpy
 import bmesh
 
-def validate_mesh_uv(obj: bpy.types.Object) -> bool:
+from . import validate_asset
+
+def validate_mesh_uv(obj_data: validate_asset.ValidationContext) -> list[str]:
     """Return true if object has UVs"""
 
-    return obj.type == "MESH" and bool(obj.data.uv_layers)
+    if obj_data.obj.type == "MESH" and bool(obj_data.obj.data.uv_layers):
+        return []
+    return ["validate_mesh_uv"]
 
 
-def validate_mesh_manifold(obj: bpy.types.Object) -> bool:
+def validate_mesh_manifold(obj_data: validate_asset.ValidationContext) -> list[str]:
     """Return true if object is manifold"""
 
-    if obj.type != "MESH":
-        return False
+    if obj_data.obj.type != "MESH":
+        return ["validate_mesh_manifold"]
     
-    prev_mode = obj.mode
+    prev_mode = obj_data.obj.mode
     if prev_mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
 
     try:
         # Use bmesh in order to edit selected mesh
-        mesh: bmesh.types.BMesh = bmesh.from_edit_mesh(obj.data)
+        mesh: bmesh.types.BMesh = bmesh.from_edit_mesh(obj_data.obj.data)
 
         # Make sure nothing in mesh is selected before finding non-
         # manifold geometry
@@ -34,7 +38,9 @@ def validate_mesh_manifold(obj: bpy.types.Object) -> bool:
 
         has_nonmanifold: bool = any(v.select for v in mesh.verts) or any(e.select for e in mesh.edges)
 
-        return not has_nonmanifold
+        if not has_nonmanifold:
+            return []
+        return ["validate_mesh_manifold"]
     finally:
         if prev_mode != "EDIT":
             bpy.ops.object.mode_set(mode=prev_mode)

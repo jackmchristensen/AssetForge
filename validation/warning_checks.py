@@ -1,12 +1,27 @@
 import bpy
 
-from . import naming
+from . import naming, validate_asset
 
-def validate_mesh_materials(obj: bpy.types.Object) -> bool:
+def validate_mesh_materials(obj_data: validate_asset.ValidationContext) -> list[str]:
     """Return true if object has materials"""
 
-    return obj.type == "MESH" and bool(obj.data.materials)
+    if obj_data.obj.type == "MESH" and bool(obj_data.obj.data.materials):
+        return []
+    return ["validate_mesh_materials"]
 
 
-def validate_file_names() -> bool:
-    return True
+def validate_file_names(obj_data: validate_asset.ValidationContext) -> list[str]:
+    messages: list[str] = []
+
+    if not naming.validate_prefix("SM_", obj_data.obj.name):
+        messages.append(f"Static mesh {obj_data.obj.name} does not start with the required prefix 'SM_'")
+
+    for image in obj_data.images:
+        if not naming.validate_prefix("T_", image.name):
+            messages.append(f"Texture {image.name_full} does not start with the required prefix 'T_'")
+    
+    for mat in obj_data.materials:
+        if not naming.validate_prefix("MI_", mat.name):
+            messages.append(f"Material {mat.name} does not start with the required prefix 'MI_'")
+
+    return messages

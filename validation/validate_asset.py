@@ -7,11 +7,34 @@ from . import error_checks, warning_checks
 Severity = Literal["error", "warning"]
 
 @dataclass(frozen=True)
+class ValidationContext:
+    obj: bpy.types.Object
+    materials: list[bpy.types.Material]
+    images: list[bpy.types.Image]
+
+@dataclass(frozen=True)
 class ValidationRule:
     code: str
     message: str
     severity: Severity
-    check: Callable[[bpy.types.Object], bool]
+    check: Callable[[bpy.types.Object], list[str]]
+
+
+def _build_context(obj: bpy.types.Object) -> ValidationContext:
+    mats = [slot.material for slot in obj.material_slots if slot.material]
+    mats = list(dict.fromkeys(mats))
+
+    images = []
+    for m in mats:
+        if not m.use_nodes or not m.node_tree:
+            continue
+        for node in m.node_tree.nodes:
+            if node.type == "TEX_IMAGE" and node.image:
+                images.append(node.image)
+
+    images = list(dict.fromkeys(images))
+
+    return ValidationContext(obj, mats, images)
 
 
 def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
@@ -19,6 +42,8 @@ def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
     
     Mesh can pass with warnings but will fail to pass if any errors are found.
     """
+
+    obj_data: ValidationContext = _build_context(obj)
 
     rules: list[ValidationRule] = [
         ValidationRule(
@@ -38,6 +63,12 @@ def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
             message="Mesh has no materials assigned to it.",
             severity="warning",
             check=warning_checks.validate_mesh_materials
+        ),
+        ValidationRule(
+            code="BAD_NAME",
+            message="",
+            severity="warning",
+            check=warning_checks.validate_file_names
         )
     ]
 
@@ -45,11 +76,11 @@ def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
     warning_items: list[dict[str, Any]] = []
 
     for r in rules:
-        passed = r.check(obj)
-        if passed:
+        message = r.check(obj_data)
+        if message == []:
             continue
 
-        item = {"code": r.code, "message": r.message}
+        item = {"code": r.code, "message": message}
         if r.severity == "error":
             error_items.append(item)
         else:

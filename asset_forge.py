@@ -7,7 +7,7 @@ from typing import Any
 from pathlib import Path
 
 from .export import mesh_exporter, mesh_metadata
-from .validation import validate_mesh
+from .validation import validate_asset
 
 
 def update_export_dir(self, context):
@@ -80,6 +80,11 @@ class AF_Settings(bt.PropertyGroup):
         default="M_"
     ) # type: ignore
 
+    material_instance_prefix: bpy.props.StringProperty(
+        name="Material Instance Prefix",
+        description="Prefix used to denote material instances.",
+        default="MI_"
+    ) # type: ignore
 
 
 def ensure_active_mesh_object() -> bt.Object:
@@ -141,7 +146,7 @@ class AF_OT_export(bt.Operator):
             master_mat_path = f"/Game/{settings.materials_dir}/{settings.ue_master_material}"
 
         mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, ue_project_path, ue_assets_dir, master_mat_path, bpy.context)
-        mesh_data["validation"] = validate_mesh.generate_validation_data(obj)
+        mesh_data["validation"] = validate_asset.generate_validation_data(obj)
 
         try:
             mesh_exporter.export_active_mesh_fbx(object_export_path)
@@ -203,3 +208,4 @@ class AF_PT_Settings(bt.Panel):
         layout.prop(settings, "mesh_prefix")
         layout.prop(settings, "texture_prefix")
         layout.prop(settings, "material_prefix")
+        layout.prop(settings, "material_instance_prefix")
