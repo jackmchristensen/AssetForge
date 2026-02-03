@@ -15,7 +15,6 @@ class ValidationContext:
 @dataclass(frozen=True)
 class ValidationRule:
     code: str
-    message: str
     severity: Severity
     check: Callable[[bpy.types.Object], list[str]]
 
@@ -48,25 +47,21 @@ def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
     rules: list[ValidationRule] = [
         ValidationRule(
             code="MISSING_UV",
-            message="No UV map found.",
             severity="error",
             check=error_checks.validate_mesh_uv
         ),
         ValidationRule(
             code="NON_MANIFOLD",
-            message="Mesh has non-manifold geometry.",
             severity="error",
             check=error_checks.validate_mesh_manifold
         ),
         ValidationRule(
             code="MISSING_MATERIALS",
-            message="Mesh has no materials assigned to it.",
             severity="warning",
             check=warning_checks.validate_mesh_materials
         ),
         ValidationRule(
             code="BAD_NAME",
-            message="",
             severity="warning",
             check=warning_checks.validate_file_names
         )
