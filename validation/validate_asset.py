@@ -1,25 +1,10 @@
 import bpy
 
-from typing import Any, Callable, Literal
-from dataclasses import dataclass
+from typing import Any
 from . import error_checks, warning_checks
+from . import validation_types as vt
 
-Severity = Literal["error", "warning"]
-
-@dataclass(frozen=True)
-class ValidationContext:
-    obj: bpy.types.Object
-    materials: list[bpy.types.Material]
-    images: list[bpy.types.Image]
-
-@dataclass(frozen=True)
-class ValidationRule:
-    code: str
-    severity: Severity
-    check: Callable[[bpy.types.Object], list[str]]
-
-
-def _build_context(obj: bpy.types.Object) -> ValidationContext:
+def _build_context(obj: bpy.types.Object) -> vt.ValidationContext:
     mats = [slot.material for slot in obj.material_slots if slot.material]
     mats = list(dict.fromkeys(mats))
 
@@ -33,7 +18,7 @@ def _build_context(obj: bpy.types.Object) -> ValidationContext:
 
     images = list(dict.fromkeys(images))
 
-    return ValidationContext(obj, mats, images)
+    return vt.ValidationContext(obj, mats, images)
 
 
 def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
@@ -42,25 +27,25 @@ def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
     Mesh can pass with warnings but will fail to pass if any errors are found.
     """
 
-    obj_data: ValidationContext = _build_context(obj)
+    obj_data: vt.ValidationContext = _build_context(obj)
 
-    rules: list[ValidationRule] = [
-        ValidationRule(
+    rules: list[vt.ValidationRule] = [
+        vt.ValidationRule(
             code="MISSING_UV",
             severity="error",
             check=error_checks.validate_mesh_uv
         ),
-        ValidationRule(
+        vt.ValidationRule(
             code="NON_MANIFOLD",
             severity="error",
             check=error_checks.validate_mesh_manifold
         ),
-        ValidationRule(
+        vt.ValidationRule(
             code="MISSING_MATERIALS",
             severity="warning",
             check=warning_checks.validate_mesh_materials
         ),
-        ValidationRule(
+        vt.ValidationRule(
             code="BAD_NAME",
             severity="warning",
             check=warning_checks.validate_file_names

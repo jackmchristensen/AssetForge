@@ -18,6 +18,8 @@ if _needs_reload:
         validate_asset = importlib.reload(validate_asset)
         error_checks = importlib.reload(error_checks)
         warning_checks = importlib.reload(warning_checks)
+        naming = importlib.reload(naming)
+        validation_types = importlib.reload(validation_types)
 
 import bpy
 
@@ -28,7 +30,9 @@ from .export import (
 from .validation import (
     error_checks,
     validate_asset,
-    warning_checks
+    warning_checks,
+    naming,
+    validation_types
 )
 from . import (
     asset_forge

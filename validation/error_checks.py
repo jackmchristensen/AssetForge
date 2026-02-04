@@ -1,9 +1,9 @@
 import bpy
 import bmesh
 
-from . import validate_asset
+from . import validation_types as vt
 
-def validate_mesh_uv(obj_data: validate_asset.ValidationContext) -> list[str]:
+def validate_mesh_uv(obj_data: vt.ValidationContext) -> list[str]:
     """Return true if object has UVs"""
 
     if obj_data.obj.type == "MESH" and bool(obj_data.obj.data.uv_layers):
@@ -11,7 +11,7 @@ def validate_mesh_uv(obj_data: validate_asset.ValidationContext) -> list[str]:
     return ["validate_mesh_uv"]
 
 
-def validate_mesh_manifold(obj_data: validate_asset.ValidationContext) -> list[str]:
+def validate_mesh_manifold(obj_data: vt.ValidationContext) -> list[str]:
     """Return true if object is manifold"""
 
     if obj_data.obj.type != "MESH":

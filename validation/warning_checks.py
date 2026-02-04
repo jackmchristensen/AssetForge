@@ -1,8 +1,7 @@
-import bpy
+from . import naming
+from . import validation_types as vt
 
-from . import naming, validate_asset
-
-def validate_mesh_materials(obj_data: validate_asset.ValidationContext) -> list[str]:
+def validate_mesh_materials(obj_data: vt.ValidationContext) -> list[str]:
     """Return true if object has materials"""
 
     if obj_data.obj.type == "MESH" and bool(obj_data.obj.data.materials):
@@ -10,7 +9,7 @@ def validate_mesh_materials(obj_data: validate_asset.ValidationContext) -> list[
     return ["validate_mesh_materials"]
 
 
-def validate_file_names(obj_data: validate_asset.ValidationContext) -> list[str]:
+def validate_file_names(obj_data: vt.ValidationContext) -> list[str]:
     messages: list[str] = []
 
     if not naming.validate_prefix("SM_", obj_data.obj.name):
