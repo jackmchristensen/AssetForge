@@ -86,6 +86,8 @@ class AF_Settings(bt.PropertyGroup):
         default="MI_"
     ) # type: ignore
 
+    pass
+
 
 def ensure_active_mesh_object() -> bt.Object:
     obj = bpy.context.active_object
@@ -95,13 +97,16 @@ def ensure_active_mesh_object() -> bt.Object:
 
     bpy.ops.object.select_all(action="DESELECT")
     obj.select_set(True)
-    bpy.context.view_layer.objects.active = obj
+    
+    view_layer = bpy.context.view_layer
+    assert view_layer is not None
+    view_layer.objects.active = obj
 
     return obj
 
 
 def run_ue_import(obj_name: str, context: bt.Context) -> None:
-    settings: AF_Settings = context.scene.af
+    settings: AF_Settings = context.scene.af # type: ignore
 
     p = Path(__file__).resolve().parent
     engine_script = str(p / "engine" / "ue_import.py")
@@ -129,7 +134,7 @@ class AF_OT_export(bt.Operator):
     bl_options: set = {"REGISTER", "UNDO"}
 
     def execute(self, context: bt.Context):
-        settings: AF_Settings = context.scene.af
+        settings: AF_Settings = context.scene.af # type: ignore
         export_dir: str = bpy.path.abspath(settings.export_dir)
         ue_project_path: str = bpy.path.abspath(settings.ue_project_path)
 
@@ -168,8 +173,10 @@ class AF_PT_panel(bt.Panel):
     bl_category: str    = "AssetForge"
 
     def draw(self, context):
-        layout: bt.UILayout = self.layout
-        settings: AF_Settings = context.scene.af
+        layout= self.layout
+        assert layout is not None
+
+        settings: AF_Settings = context.scene.af # type: ignore
         
         layout.use_property_split = True
         layout.use_property_decorate = True
@@ -194,8 +201,10 @@ class AF_PT_Settings(bt.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        layout = self.layout
-        settings = context.scene.af
+        layout= self.layout
+        assert layout is not None
+
+        settings = context.scene.af # type: ignore
 
         layout.use_property_split = True
         layout.use_property_decorate = True
@@ -209,3 +218,5 @@ class AF_PT_Settings(bt.Panel):
         layout.prop(settings, "texture_prefix")
         layout.prop(settings, "material_prefix")
         layout.prop(settings, "material_instance_prefix")
+
+

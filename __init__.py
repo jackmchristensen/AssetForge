@@ -10,17 +10,6 @@ bl_info = {
 
 _needs_reload = "asset_forge" in locals()
 
-if _needs_reload:
-        import importlib
-        asset_forge = importlib.reload(asset_forge)
-        mesh_metadata = importlib.reload(mesh_metadata)
-        mesh_exporter = importlib.reload(mesh_exporter)
-        validate_asset = importlib.reload(validate_asset)
-        error_checks = importlib.reload(error_checks)
-        warning_checks = importlib.reload(warning_checks)
-        naming = importlib.reload(naming)
-        validation_types = importlib.reload(validation_types)
-
 import bpy
 
 from .export import (
@@ -38,17 +27,28 @@ from . import (
     asset_forge
 )
 
+if _needs_reload:
+        import importlib
+        asset_forge = importlib.reload(asset_forge)
+        mesh_metadata = importlib.reload(mesh_metadata)
+        mesh_exporter = importlib.reload(mesh_exporter)
+        validate_asset = importlib.reload(validate_asset)
+        error_checks = importlib.reload(error_checks)
+        warning_checks = importlib.reload(warning_checks)
+        naming = importlib.reload(naming)
+        validation_types = importlib.reload(validation_types)
+
 classes = (asset_forge.AF_OT_export, asset_forge.AF_PT_panel, asset_forge.AF_Settings, asset_forge.AF_PT_Settings)
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
     
-    bpy.types.Scene.af = bpy.props.PointerProperty(type=asset_forge.AF_Settings)
+    bpy.types.Scene.af = bpy.props.PointerProperty(type=asset_forge.AF_Settings) # type: ignore
 
 
 def unregister():
-    del bpy.types.Scene.af
+    del bpy.types.Scene.af # type: ignore
     
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)

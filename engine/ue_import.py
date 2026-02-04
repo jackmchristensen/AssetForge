@@ -1,7 +1,9 @@
 import unreal
 import json
 import re
+
 from pathlib import Path
+from typing import cast
 
 def _ensure_folder(path: str) -> None:
     unreal.EditorAssetLibrary.make_directory(path)
@@ -15,7 +17,8 @@ def _import_file(filepath: str, destination: str) -> list[str]:
     task.set_editor_property("replace_existing", True)
     task.set_editor_property("save", True)
 
-    unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+    tasks = cast(unreal.Array, [task])
+    unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
     return list(task.get_editor_property("imported_object_paths") or [])
 
 
@@ -43,7 +46,8 @@ def _import_fbx(fbx_path: str, mesh_folder: str) -> unreal.StaticMesh:
     ui.set_editor_property("import_textures", False) 
     task.set_editor_property("options", ui)
 
-    unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+    tasks = cast(unreal.Array, [task])
+    unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
 
     imported_mesh_paths = list(task.get_editor_property("imported_object_paths") or [])
     mesh_asset = _load_first(imported_mesh_paths)

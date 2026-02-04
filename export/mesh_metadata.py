@@ -3,7 +3,7 @@ import datetime
 import os
 
 from bpy import types as bt
-from typing import Any
+from typing import Any, cast
 
 def get_evaluated_mesh_stats(obj: bt.Object, context: bt.Context) -> dict[str, int]:
     """Return mesh statistics after all modifiers are evaluated.
@@ -41,7 +41,10 @@ def _get_shader_connected_to_output(mat: bt.Material):
     
     TODO Check if Principled BSDF node is connected to output node. Return nothing if not or doesn't exist.
     """
+
     tree = mat.node_tree
+    assert tree is not None
+
     shader = next((n for n in tree.nodes if n.type == "BSDF_PRINCIPLED"))
     return shader
 
@@ -55,33 +58,55 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
     """
 
     if not sock.is_linked:
-        try:
+        if isinstance(sock, bt.NodeSocketColor):
             val = list(sock.default_value)[:3]
-        except TypeError:
+        elif isinstance(sock, bt.NodeSocketFloat):
+            val = sock.default_value
+        elif isinstance(sock, bt.NodeSocketFloatFactor):
             val = sock.default_value
         return { "type": "constant", "value": val }
     
-    from_node: bt.Node = sock.links[0].from_node
+    links = sock.links
+    assert links is not None
+    from_node = links[0].from_node
+    assert isinstance(from_node, bt.Node)
 
-    if from_node.type == "TEX_IMAGE" and from_node.image:
+    if from_node.type == "TEX_IMAGE":
+        from_node = cast(bt.ShaderNodeTexImage, from_node)
         image = from_node.image
+        assert image is not None
+
+        colorspace = image.colorspace_settings
+        assert colorspace is not None
+
         return {
             "type": "texture",
             "path": bpy.path.abspath(image.filepath),
-            "color_space": image.colorspace_settings.name
+            "color_space": colorspace.name
         }
     
     if from_node.type == "NORMAL_MAP":
         color_input = from_node.inputs.get("Color")
         if color_input and color_input.is_linked:
-            texture = color_input.links[0].from_node
-            if texture.type == "TEX_IMAGE":
-                image = texture.image
+            links = color_input.links
+            assert links is not None
+
+            tex_node = links[0].from_node
+            assert tex_node is not None
+            
+            if tex_node.type == "TEX_IMAGE":
+                tex_node = cast(bt.ShaderNodeTexImage, tex_node)
+                image = tex_node.image
+                assert image is not None
+
+                colorspace = image.colorspace_settings
+                assert colorspace is not None
+
                 return {
                     "type": "texture",
                     "usage": "normal",
                     "path": bpy.path.abspath(image.filepath),
-                    "color_space": image.colorspace_settings.name
+                    "color_space": colorspace.name
                 }
 
     return { "type": "complex" }
@@ -92,16 +117,25 @@ def get_material_data(obj: bt.Object) -> list[dict[str, Any]]:
     materials: list[dict[str, Any]] = []
 
     for mat in obj.material_slots:
-        shader = _get_shader_connected_to_output(mat.material)
+        next_material = mat.material
+        assert next_material is not None
+
+        shader = _get_shader_connected_to_output(next_material)
 
         base_color          = shader.inputs.get("Base Color")
+        assert base_color is not None
         roughness           = shader.inputs.get("Roughness")
+        assert roughness is not None
         metallic            = shader.inputs.get("Metallic")
+        assert metallic is not None
         normal              = shader.inputs.get("Normal")
+        assert normal is not None
         emission_color      = shader.inputs.get("Emission Color")
+        assert emission_color is not None
         alpha               = shader.inputs.get("Alpha")
+        assert alpha is not None
 
-        mat_data: dict[str, Any] = { "name": mat.material.name }
+        mat_data: dict[str, Any] = { "name": next_material.name }
         parameters: dict[str, Any] = {}
 
         parameters["base_color"]      = _classify_shader_input(base_color)
@@ -125,6 +159,10 @@ def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str, ue_
     Builds a JSON-serializable metadata dictionary containing source
     information, export settings, and evaluated mesh statistics.
     """
+
+    assert obj is not None
+    obj_data = obj.data
+    assert isinstance(obj_data, bt.Mesh)
 
     filename: str = f"{obj.name}.fbx"
     export_path: str = os.path.join(export_dir, filename)
@@ -159,10 +197,10 @@ def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str, ue_
             "material_count": len(materials),
             "stats": {
                 "original": {
-                    "vertices": len(obj.data.vertices),
-                    "edges": len(obj.data.edges),
-                    "faces": len(obj.data.polygons),
-                    "triangles": sum(len(p.vertices) - 2 for p in obj.data.polygons)
+                    "vertices": len(obj_data.vertices),
+                    "edges": len(obj_data.edges),
+                    "faces": len(obj_data.polygons),
+                    "triangles": sum(len(p.vertices) - 2 for p in obj_data.polygons)
                 },
                 "evaluated": stats
             }

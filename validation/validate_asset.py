@@ -33,22 +33,22 @@ def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
         vt.ValidationRule(
             code="MISSING_UV",
             severity="error",
-            check=error_checks.validate_mesh_uv
+            check=error_checks.validate_mesh_uv # type: ignore
         ),
         vt.ValidationRule(
             code="NON_MANIFOLD",
             severity="error",
-            check=error_checks.validate_mesh_manifold
+            check=error_checks.validate_mesh_manifold # type: ignore
         ),
         vt.ValidationRule(
             code="MISSING_MATERIALS",
             severity="warning",
-            check=warning_checks.validate_mesh_materials
+            check=warning_checks.validate_mesh_materials # type: ignore
         ),
         vt.ValidationRule(
             code="BAD_NAME",
             severity="warning",
-            check=warning_checks.validate_file_names
+            check=warning_checks.validate_file_names # type: ignore
         )
     ]
 
@@ -56,7 +56,7 @@ def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
     warning_items: list[dict[str, Any]] = []
 
     for r in rules:
-        message = r.check(obj_data)
+        message = r.check(obj_data) # type: ignore
         if message == []:
             continue
 

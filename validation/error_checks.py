@@ -3,27 +3,38 @@ import bmesh
 
 from . import validation_types as vt
 
-def validate_mesh_uv(obj_data: vt.ValidationContext) -> list[str]:
+def validate_mesh_uv(validation_data: vt.ValidationContext) -> list[str]:
     """Return true if object has UVs"""
 
-    if obj_data.obj.type == "MESH" and bool(obj_data.obj.data.uv_layers):
+    obj = validation_data.obj
+    
+    if obj.type != "MESH":
+        return ["Error validating UVs. Asset is not a mesh."]
+    
+    data = obj.data
+    assert isinstance(data, bpy.types.Mesh)
+
+    if validation_data.obj.type == "MESH" and bool(data.uv_layers):
         return []
-    return ["validate_mesh_uv"]
+    return ["Asset is missing UVs."]
 
 
-def validate_mesh_manifold(obj_data: vt.ValidationContext) -> list[str]:
+def validate_mesh_manifold(validation_data: vt.ValidationContext) -> list[str]:
     """Return true if object is manifold"""
 
-    if obj_data.obj.type != "MESH":
-        return ["validate_mesh_manifold"]
+    if validation_data.obj.type != "MESH":
+        return ["Error checking if asset is manifold. Asset is not a mesh."]
     
-    prev_mode = obj_data.obj.mode
+    prev_mode = validation_data.obj.mode
     if prev_mode != "EDIT":
         bpy.ops.object.mode_set(mode="EDIT")
 
     try:
         # Use bmesh in order to edit selected mesh
-        mesh: bmesh.types.BMesh = bmesh.from_edit_mesh(obj_data.obj.data)
+        data = validation_data.obj.data
+        assert isinstance(data, bpy.types.Mesh)
+
+        mesh: bmesh.types.BMesh = bmesh.from_edit_mesh(data)
 
         # Make sure nothing in mesh is selected before finding non-
         # manifold geometry
@@ -40,7 +51,7 @@ def validate_mesh_manifold(obj_data: vt.ValidationContext) -> list[str]:
 
         if not has_nonmanifold:
             return []
-        return ["validate_mesh_manifold"]
+        return ["Mesh is not manifold"]
     finally:
         if prev_mode != "EDIT":
             bpy.ops.object.mode_set(mode=prev_mode)

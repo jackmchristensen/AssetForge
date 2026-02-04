@@ -1,0 +1,10 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+
+  "typeCheckingMode": "basic",
+
+  "reportMissingImports": false,
+
+  "exclude": ["**/__pycache__", "**/.venv", "**/build", "**/dist"],
+}
