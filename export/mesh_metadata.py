@@ -71,8 +71,7 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
     from_node = links[0].from_node
     assert isinstance(from_node, bt.Node)
 
-    if from_node.type == "TEX_IMAGE":
-        from_node = cast(bt.ShaderNodeTexImage, from_node)
+    if isinstance(from_node, bt.ShaderNodeTexImage):
         image = from_node.image
         assert image is not None
 
@@ -85,7 +84,7 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
             "color_space": colorspace.name
         }
     
-    if from_node.type == "NORMAL_MAP":
+    if isinstance(from_node, bt.ShaderNodeNormalMap):
         color_input = from_node.inputs.get("Color")
         if color_input and color_input.is_linked:
             links = color_input.links
@@ -94,8 +93,7 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
             tex_node = links[0].from_node
             assert tex_node is not None
             
-            if tex_node.type == "TEX_IMAGE":
-                tex_node = cast(bt.ShaderNodeTexImage, tex_node)
+            if isinstance(tex_node, bt.ShaderNodeTexImage):
                 image = tex_node.image
                 assert image is not None
 
