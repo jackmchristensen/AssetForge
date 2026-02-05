@@ -13,7 +13,7 @@ def _build_context(obj: bpy.types.Object) -> vt.ValidationContext:
         if not m.use_nodes or not m.node_tree:
             continue
         for node in m.node_tree.nodes:
-            if node.type == "TEX_IMAGE" and node.image:
+            if isinstance(node, bpy.types.ShaderNodeTexImage):
                 images.append(node.image)
 
     images = list(dict.fromkeys(images))
