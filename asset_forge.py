@@ -114,7 +114,7 @@ def run_ue_import(obj_name: str, context: bt.Context) -> None:
     project_path: str = bpy.path.abspath(settings.ue_project_path)
     
     subprocess.Popen([
-        f"/home/jchristensen/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor",
+        "/home/jchristensen/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor",
         f"{project_path}",
         f"-ExecutePythonScript={engine_script}",
         f"-manifest={export_dir}/{obj_name}.json",
