@@ -3,7 +3,7 @@ import datetime
 import os
 
 from bpy import types as bt
-from typing import Any, cast
+from typing import Any
 
 def get_evaluated_mesh_stats(obj: bt.Object, context: bt.Context) -> dict[str, int]:
     """Return mesh statistics after all modifiers are evaluated.
@@ -58,11 +58,9 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
     """
 
     if not sock.is_linked:
-        if isinstance(sock, bt.NodeSocketColor):
+        if isinstance(sock, bt.NodeSocketColor) or isinstance(sock, bt.NodeSocketVector):
             val = list(sock.default_value)[:3]
-        elif isinstance(sock, bt.NodeSocketFloat):
-            val = sock.default_value
-        elif isinstance(sock, bt.NodeSocketFloatFactor):
+        elif isinstance(sock, bt.NodeSocketFloat) or isinstance(sock, bt.NodeSocketFloatFactor):
             val = sock.default_value
         return { "type": "constant", "value": val }
     
