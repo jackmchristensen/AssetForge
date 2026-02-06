@@ -9,6 +9,7 @@ from sys import platform
 
 from .export import mesh_exporter, mesh_metadata
 from .validation import validate_asset
+from . import config
 
 
 def update_export_dir(self, context):
@@ -66,25 +67,25 @@ class AF_Settings(bt.PropertyGroup):
     mesh_prefix: bpy.props.StringProperty(
         name="Mesh Prefix",
         description="Prefix used to denote static mesh assets.",
-        default="SM_"
+        default=config.get_setting("naming.mesh_prefix", "SM_")
     ) # type: ignore
 
     texture_prefix: bpy.props.StringProperty(
         name="Texture Prefix",
         description="Prefix used to denote image texture files.",
-        default="T_"
+        default=config.get_setting("naming.texture_prefix", "T_")
     ) # type: ignore
 
     material_prefix: bpy.props.StringProperty(
         name="Master Material Prefix",
         description="Prefix used to denote master materials.",
-        default="M_"
+        default=config.get_setting("naming.material_prefix", "M_")
     ) # type: ignore
 
     material_instance_prefix: bpy.props.StringProperty(
         name="Material Instance Prefix",
         description="Prefix used to denote material instances.",
-        default="MI_"
+        default=config.get_setting("naming.material_instance_prefix", "MI_")
     ) # type: ignore
 
     pass
@@ -106,14 +107,16 @@ def ensure_active_mesh_object() -> bt.Object:
     return obj
 
 
-def _get_ue_path(version: str) -> str:
-    if platform == "linux" or platform == "linux2":
-        return f"/opt/unreal/Linux_Unreal_Engine_{version}/Engine/Binaries/Linux/UnrealEditor"
-    elif platform == "win32":
-        return f"C:\\Program Files\\Epic Games\\{version}\\Engine\\Binaries\\Win64\\UnrealEditor.exe"
-    elif platform == "darwin":
-        return f"/Users/Shared/Epic Games/UE_{version}/Engine/Binaries/Mac/UnrealEditor.app/Contents/MacOS/UnrealEditor"
-    return ""
+def _get_ue_path() -> str:
+    platform_map = {
+        "linux": "linux",
+        "linux2": "linux",
+        "win32": "windows",
+        "darwin": "darwin"
+    }
+
+    platform_key = platform_map.get(platform, "")
+    return config.get_setting(f"unreal_engine.paths.{platform_key}", "")
 
 
 def run_ue_import(obj_name: str, context: bt.Context) -> None:
@@ -140,7 +143,7 @@ def run_ue_import(obj_name: str, context: bt.Context) -> None:
 
 
     subprocess.Popen([
-        _get_ue_path("5.7.2"),
+        _get_ue_path(),
         f"{project_path}",
         f"-ExecutePythonScript={engine_script}",
         f"-manifest={manifest_path}",
@@ -178,7 +181,7 @@ class AF_OT_export(bt.Operator):
         try:
             mesh_exporter.export_active_mesh_fbx(object_export_path)
             mesh_exporter.export_mesh_metadata(data_export_path, mesh_data)
-            run_ue_import(obj.name, context)
+            # run_ue_import(obj.name, context)
         except Exception as e:
             self.report({"ERROR"}, str(e))
             return {"CANCELLED"}

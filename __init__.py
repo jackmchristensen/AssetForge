@@ -12,6 +12,8 @@ _needs_reload = "asset_forge" in locals()
 
 import bpy
 
+from . import config
+
 from .export import (
     mesh_exporter,
     mesh_metadata
@@ -28,15 +30,17 @@ from . import (
 )
 
 if _needs_reload:
-        import importlib
-        asset_forge = importlib.reload(asset_forge)
-        mesh_metadata = importlib.reload(mesh_metadata)
-        mesh_exporter = importlib.reload(mesh_exporter)
-        validate_asset = importlib.reload(validate_asset)
-        error_checks = importlib.reload(error_checks)
-        warning_checks = importlib.reload(warning_checks)
-        naming = importlib.reload(naming)
-        validation_types = importlib.reload(validation_types)
+    import importlib
+    config = importlib.reload(config)
+    config.reload_settings()
+    asset_forge = importlib.reload(asset_forge)
+    mesh_metadata = importlib.reload(mesh_metadata)
+    mesh_exporter = importlib.reload(mesh_exporter)
+    validate_asset = importlib.reload(validate_asset)
+    error_checks = importlib.reload(error_checks)
+    warning_checks = importlib.reload(warning_checks)
+    naming = importlib.reload(naming)
+    validation_types = importlib.reload(validation_types)
 
 classes = (asset_forge.AF_OT_export, asset_forge.AF_PT_panel, asset_forge.AF_Settings, asset_forge.AF_PT_Settings)
 

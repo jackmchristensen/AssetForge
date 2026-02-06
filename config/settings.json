@@ -1,7 +1,7 @@
 {
   "unreal_engine": {
     "version": "5.7.2",
-    "install_paths": {
+    "paths": {
       "linux": "/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor",
       "windows": "C:\\Program Files\\Epic Games\\UE_5.7\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
       "darwin": "/Users/Shared/Epic Games/UE_5.7/Engine/Binaries/Mac/UnrealEditor.app/Contents/MacOS/UnrealEditor"

@@ -3,6 +3,7 @@ import os
 import json
 
 from typing import Any
+from .. import config
 
 def export_active_mesh_fbx(export_path: str) -> None:
     """Exports current active mesh as fbx. Creates export directory if 
@@ -20,8 +21,8 @@ def export_active_mesh_fbx(export_path: str) -> None:
         use_mesh_modifiers=True,
         add_leaf_bones=False,
         bake_anim=False,
-        axis_forward="-Y",
-        axis_up="Z",
+        axis_forward=config.get_setting("export.fbx_axis_forward", default="-Y"),
+        axis_up=config.get_setting("export.fbx_axis_up", default="Z"),
     )
 
 

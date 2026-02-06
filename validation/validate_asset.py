@@ -50,6 +50,11 @@ def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
             severity="warning",
             check=warning_checks.validate_file_names # type: ignore
         )
+        # vt.ValidationRule(
+        #     code="OVER_TRIANGLE_BUDGET",
+        #     severity="warning",
+        #     check=warning_checks.validate_triangle_budget # type: ignore
+        # )
     ]
 
     error_items: list[dict[str, Any]] = []
