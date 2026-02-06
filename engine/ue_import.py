@@ -108,6 +108,8 @@ def _import_textures(manifest_data, texture_destination_folder: str) -> dict[str
 def _populate_material_instance(mat_instance: unreal.MaterialInstanceConstant, mat_data: dict[str, Any], texture_lookup: dict[str, unreal.Texture]) -> None:
     parameters = mat_data.get("parameters", {})
 
+    _debug_log(f"Populating material instance {mat_instance.get_name()} with parameters: {parameters}")
+
     for param_name, param_data in parameters.items():
         param_type = param_data.get("type")
 
@@ -131,16 +133,28 @@ def _populate_material_instance(mat_instance: unreal.MaterialInstanceConstant, m
 
 
 def _create_material_instance(mat_instance_name: str, mat_path: str, mat_master: unreal.Material) -> unreal.MaterialInstanceConstant:
-    factory = unreal.MaterialInstanceConstantFactoryNew()
+    """Checks if material instance exists and creates a material instance from the master material if it doesn't.
 
-    mat_instance_class = unreal.load_class(None, "/Script/Unreal.MaterialInstanceConstant")
+    Returns the material instance.
+    """
+
+    if unreal.load_asset(f"{mat_path}/{mat_instance_name}") is not None:
+        _debug_log(f"Material instance already exists, loading: {mat_path}/{mat_instance_name}")
+        return unreal.load_asset(f"{mat_path}/{mat_instance_name}")
+
+    factory = unreal.MaterialInstanceConstantFactoryNew()
+    _debug_log(f"Material instance factory created: {factory}")
 
     material_instance = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
         asset_name=mat_instance_name,
         package_path=mat_path,
-        asset_class=mat_instance_class,
+        asset_class=unreal.MaterialInstanceConstant, # type: ignore
         factory=factory
     )
+    _debug_log(f"Material instance created: {material_instance}")
+
+    if material_instance is None:
+        raise RuntimeError(f"Failed to create material instance: {mat_instance_name} at {mat_path}")
 
     material_instance.set_editor_property("parent", mat_master)
     
@@ -193,6 +207,7 @@ def ingest_asset(json_path: str) -> None:
     _debug_log(f"Master material path: {MASTER_MAT_PATH}")
     master_mat = unreal.load_asset(MASTER_MAT_PATH)
     _debug_log(f"Loaded master material: {master_mat}")
+    _debug_log(f"Asset material folder: {mat_folder}")
 
     for mat in material_data:
         try:
