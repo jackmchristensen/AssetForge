@@ -1,0 +1,42 @@
+{
+  "unreal_engine": {
+    "version": "5.7.2",
+    "install_paths": {
+      "linux": "/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor",
+      "windows": "C:\\Program Files\\Epic Games\\UE_5.7\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+      "darwin": "/Users/Shared/Epic Games/UE_5.7/Engine/Binaries/Mac/UnrealEditor.app/Contents/MacOS/UnrealEditor"
+    }
+  },
+  "naming_conventions": {
+    "mesh_prefix": "SM_",
+    "texture_prefix": "T_",
+    "material_prefix": "M_",
+    "material_instance_prefix": "MI_"
+  },
+  "material_parameters": {
+    "base_color": "BaseColor",
+    "metallic": "Metallic",
+    "roughness": "Roughness",
+    "normal": "Normal",
+    "opacity": "Opacity"
+  },
+  "asset_budgets": {
+    "PROP_SMALL": {
+      "max_triangles": 5000,
+      "max_texture_size": 2048
+    },
+    "HERO_PROP": {
+      "max_triangles": 50000,
+      "max_texture_size": 4096
+    },
+    "MODULAR": {
+      "max_triangles": 2000,
+      "max_texture_size": 2048,
+      "enforce_grid_alignment": true
+    }
+  },
+  "export":{
+    "fbx_axis_forward": "-Y",
+    "fbx_axis_up": "Z"
+  }
+}
