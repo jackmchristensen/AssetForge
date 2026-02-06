@@ -2,12 +2,15 @@ import unreal
 import json
 import re
 import traceback
+import tempfile
+import os
 
 from pathlib import Path
 from typing import Any, cast
 
 # Debug logging
-def _debug_log(msg: str, log_path: str = "/tmp/asset_forge_debug.log"):
+def _debug_log(msg: str):
+    log_path = os.path.join(tempfile.gettempdir(), "asset_forge_debug.log")
     with open(log_path, "a") as f:
         f.write(f"{msg}\n")
 

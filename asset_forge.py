@@ -5,6 +5,7 @@ import subprocess
 from bpy import types as bt
 from typing import Any
 from pathlib import Path
+from sys import platform
 
 from .export import mesh_exporter, mesh_metadata
 from .validation import validate_asset
@@ -105,6 +106,16 @@ def ensure_active_mesh_object() -> bt.Object:
     return obj
 
 
+def _get_ue_path(version: str) -> str:
+    if platform == "linux" or platform == "linux2":
+        return f"/opt/unreal/Linux_Unreal_Engine_{version}/Engine/Binaries/Linux/UnrealEditor"
+    elif platform == "win32":
+        return f"C:\\Program Files\\Epic Games\\{version}\\Engine\\Binaries\\Win64\\UnrealEditor.exe"
+    elif platform == "darwin":
+        return f"/Users/Shared/Epic Games/UE_{version}/Engine/Binaries/Mac/UnrealEditor.app/Contents/MacOS/UnrealEditor"
+    return ""
+
+
 def run_ue_import(obj_name: str, context: bt.Context) -> None:
     settings: AF_Settings = context.scene.af # type: ignore
 
@@ -112,19 +123,30 @@ def run_ue_import(obj_name: str, context: bt.Context) -> None:
     engine_script = str(p / "engine" / "ue_import.py")
     export_dir: str = bpy.path.abspath(settings.export_dir)
     project_path: str = bpy.path.abspath(settings.ue_project_path)
-    
+    manifest_path: str = os.path.join(export_dir, f"{obj_name}.json")
+
+    kwargs: dict[str, Any] = {
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+        "env": os.environ.copy(),
+    }
+    if platform == "win32":
+        DETACHED_PROCESS = 0x00000008
+        CREATE_NEW_PROCESS_GROUP = 0x00000200
+        kwargs["creationflags"] = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+    else:
+        kwargs["start_new_session"] = True
+        kwargs["close_fds"] = True
+
+
     subprocess.Popen([
-        "/home/jchristensen/opt/unreal/Linux_Unreal_Engine_5.7.2/Engine/Binaries/Linux/UnrealEditor",
+        _get_ue_path("5.7.2"),
         f"{project_path}",
         f"-ExecutePythonScript={engine_script}",
-        f"-manifest={export_dir}/{obj_name}.json",
+        f"-manifest={manifest_path}",
         "-unattended -nop4 -nosplash -stdout -FullStdOutLogOutput -log"
         ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True,
-        close_fds=True,
-        env=os.environ.copy(),
+        **kwargs
     )
 
 
