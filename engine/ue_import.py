@@ -106,6 +106,8 @@ def _import_textures(manifest_data, texture_destination_folder: str) -> dict[str
 
 
 def _populate_material_instance(mat_instance: unreal.MaterialInstanceConstant, mat_data: dict[str, Any], texture_lookup: dict[str, unreal.Texture]) -> None:
+    """Populates a material instance with parameter values based on the material data from the JSON manifest."""
+
     parameters = mat_data.get("parameters", {})
 
     _debug_log(f"Populating material instance {mat_instance.get_name()} with parameters: {parameters}")
@@ -120,15 +122,15 @@ def _populate_material_instance(mat_instance: unreal.MaterialInstanceConstant, m
             switch_param = "Use" + param_name + "Texture"
 
             unreal.MaterialEditingLibrary.set_material_instance_static_switch_parameter_value(
-                mat_instance,
-                unreal.Name(switch_param),
-                True
+                instance=mat_instance,
+                parameter_name=unreal.Name(switch_param),
+                value=True
             )
             
             unreal.MaterialEditingLibrary.set_material_instance_texture_parameter_value(
-                mat_instance,
-                unreal.Name(param_name),
-                texture
+                instance=mat_instance,
+                parameter_name=unreal.Name(param_name),
+                value=texture
             )
 
 
@@ -201,7 +203,6 @@ def ingest_asset(json_path: str) -> None:
 
     texture_lookup_by_path: dict[str, unreal.Texture] = _import_textures(data, tex_folder)
 
-    # TODO create material instances
     material_data = data.get("materials", [])
     _debug_log(f"Material data: {material_data}")
     _debug_log(f"Master material path: {MASTER_MAT_PATH}")
