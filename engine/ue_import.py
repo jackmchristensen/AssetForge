@@ -1,9 +1,16 @@
 import unreal
 import json
 import re
+import traceback
 
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
+
+# Debug logging
+def _debug_log(msg: str, log_path: str = "/tmp/asset_forge_debug.log"):
+    with open(log_path, "a") as f:
+        f.write(f"{msg}\n")
+
 
 def _ensure_folder(path: str) -> None:
     unreal.EditorAssetLibrary.make_directory(path)
@@ -95,6 +102,48 @@ def _import_textures(manifest_data, texture_destination_folder: str) -> dict[str
     return texture_lookup_by_path
 
 
+def _populate_material_instance(mat_instance: unreal.MaterialInstanceConstant, mat_data: dict[str, Any], texture_lookup: dict[str, unreal.Texture]) -> None:
+    parameters = mat_data.get("parameters", {})
+
+    for param_name, param_data in parameters.items():
+        param_type = param_data.get("type")
+
+        if param_type == "texture":
+            tex_path = param_data.get("path")
+            texture = texture_lookup.get(tex_path)
+
+            switch_param = "Use" + param_name + "Texture"
+
+            unreal.MaterialEditingLibrary.set_material_instance_static_switch_parameter_value(
+                mat_instance,
+                unreal.Name(switch_param),
+                True
+            )
+            
+            unreal.MaterialEditingLibrary.set_material_instance_texture_parameter_value(
+                mat_instance,
+                unreal.Name(param_name),
+                texture
+            )
+
+
+def _create_material_instance(mat_instance_name: str, mat_path: str, mat_master: unreal.Material) -> unreal.MaterialInstanceConstant:
+    factory = unreal.MaterialInstanceConstantFactoryNew()
+
+    mat_instance_class = unreal.load_class(None, "/Script/Unreal.MaterialInstanceConstant")
+
+    material_instance = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
+        asset_name=mat_instance_name,
+        package_path=mat_path,
+        asset_class=mat_instance_class,
+        factory=factory
+    )
+
+    material_instance.set_editor_property("parent", mat_master)
+    
+    return material_instance
+
+
 def ingest_asset(json_path: str) -> None:
     """Imports asset and image textures to Unreal Editor and creates material instances if materials
     are assigned in Blender and a master material is selected.
@@ -136,7 +185,24 @@ def ingest_asset(json_path: str) -> None:
     texture_lookup_by_path: dict[str, unreal.Texture] = _import_textures(data, tex_folder)
 
     # TODO create material instances
-    parent_mat = unreal.load_asset(MASTER_MAT_PATH)
+    material_data = data.get("materials", [])
+    _debug_log(f"Material data: {material_data}")
+    _debug_log(f"Master material path: {MASTER_MAT_PATH}")
+    master_mat = unreal.load_asset(MASTER_MAT_PATH)
+    _debug_log(f"Loaded master material: {master_mat}")
+
+    for mat in material_data:
+        try:
+            mat_name = mat.get("name", "Material")
+            _debug_log(f"Creating material instance: {mat_name}")
+            mat_instance = _create_material_instance(mat_name, mat_folder, master_mat)
+            _debug_log(f"Created: {mat_instance}")
+            _populate_material_instance(mat_instance, mat, texture_lookup_by_path)
+            unreal.EditorAssetLibrary.save_loaded_asset(mat_instance)
+            unreal.log(f"[Ingest] Created material instance: {mat_name}")
+        except Exception as e:
+            _debug_log(f"ERROR creating material {mat_name}: {e}")
+            _debug_log(traceback.format_exc())
 
 
 def get_cli_value(name: str) -> str | None:
