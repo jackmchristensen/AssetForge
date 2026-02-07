@@ -4,7 +4,7 @@ from typing import Any
 from . import error_checks, warning_checks
 from . import validation_types as vt
 
-def _build_context(obj: bpy.types.Object) -> vt.ValidationContext:
+def _build_context(obj: bpy.types.Object, asset_type: str) -> vt.ValidationContext:
     mats = [slot.material for slot in obj.material_slots if slot.material]
     mats = list(dict.fromkeys(mats))
 
@@ -18,16 +18,16 @@ def _build_context(obj: bpy.types.Object) -> vt.ValidationContext:
 
     images = list(dict.fromkeys(images))
 
-    return vt.ValidationContext(obj, mats, images)
+    return vt.ValidationContext(obj, asset_type, mats, images)
 
 
-def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
+def generate_validation_data(obj: bpy.types.Object, asset_type: str) -> dict[str, Any]:
     """Validates mesh and returns any errors or warnings.
     
     Mesh can pass with warnings but will fail to pass if any errors are found.
     """
 
-    obj_data: vt.ValidationContext = _build_context(obj)
+    obj_data: vt.ValidationContext = _build_context(obj, asset_type)
 
     rules: list[vt.ValidationRule] = [
         vt.ValidationRule(
@@ -49,12 +49,22 @@ def generate_validation_data(obj: bpy.types.Object) -> dict[str, Any]:
             code="BAD_NAME",
             severity="warning",
             check=warning_checks.validate_file_names # type: ignore
-        )
-        # vt.ValidationRule(
-        #     code="OVER_TRIANGLE_BUDGET",
-        #     severity="warning",
-        #     check=warning_checks.validate_triangle_budget # type: ignore
-        # )
+        ),
+        vt.ValidationRule(
+            code="OVER_TRIANGLE_BUDGET",
+            severity="warning",
+            check=warning_checks.validate_triangle_budget # type: ignore
+        ),
+        vt.ValidationRule(
+            code="TEXTURE_NOT_SQUARE",
+            severity="warning",
+            check=warning_checks.validate_texture_aspect_ratio # type: ignore
+        ),
+        vt.ValidationRule(
+            code="OVER_TEXTURE_BUDGET",
+            severity="warning",
+            check=warning_checks.validate_texture_size # type: ignore
+        ),
     ]
 
     error_items: list[dict[str, Any]] = []

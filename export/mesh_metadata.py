@@ -149,7 +149,7 @@ def get_material_data(obj: bt.Object) -> list[dict[str, Any]]:
     return materials
 
 
-def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str, ue_assets_dir: str, material_path: str, context: bt.Context) -> dict[str, Any]:
+def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str, ue_assets_dir: str, material_path: str, asset_type: str, context: bt.Context) -> dict[str, Any]:
     """Generate export metadata for a Blender object.
 
     Builds a JSON-serializable metadata dictionary containing source
@@ -172,7 +172,8 @@ def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str, ue_
         "schema_version": "0.1.0",
         "source": {
             "blend_file": bpy.data.filepath, 
-            "object_name": obj.name
+            "object_name": obj.name,
+            "asset_type": asset_type
         },
         "export": {
             "target": "unreal",

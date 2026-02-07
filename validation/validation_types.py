@@ -8,6 +8,7 @@ Severity = Literal["error", "warning"]
 @dataclass(frozen=True)
 class ValidationContext:
     obj: bpy.types.Object
+    obj_type: str
     materials: list[bpy.types.Material]
     images: list[bpy.types.Image]
 

@@ -175,8 +175,8 @@ class AF_OT_export(bt.Operator):
         if settings.ue_master_material != "":
             master_mat_path = f"/Game/{settings.materials_dir}/{settings.ue_master_material}"
 
-        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, ue_project_path, ue_assets_dir, master_mat_path, bpy.context)
-        mesh_data["validation"] = validate_asset.generate_validation_data(obj)
+        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, ue_project_path, ue_assets_dir, master_mat_path, settings.asset_type, bpy.context)
+        mesh_data["validation"] = validate_asset.generate_validation_data(obj, settings.asset_type)
 
         try:
             mesh_exporter.export_active_mesh_fbx(object_export_path)
@@ -184,8 +184,8 @@ class AF_OT_export(bt.Operator):
 
             if not mesh_data["validation"]["passed"]:
                 raise RuntimeError(f"Asset failed validation checks. Errors: {mesh_data['validation']['errors']}")
-            else:
-                run_ue_import(obj.name, context)
+            # else:
+                # run_ue_import(obj.name, context)
         except Exception as e:
             self.report({"ERROR"}, str(e))
             return {"CANCELLED"}
