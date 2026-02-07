@@ -42,7 +42,7 @@ if _needs_reload:
     naming = importlib.reload(naming)
     validation_types = importlib.reload(validation_types)
 
-classes = (asset_forge.AF_OT_export, asset_forge.AF_PT_panel, asset_forge.AF_Settings, asset_forge.AF_PT_Settings)
+classes = (asset_forge.AF_OT_export, asset_forge.AF_PT_panel, asset_forge.AF_Settings, asset_forge.AF_PT_Settings, asset_forge.AF_PT_Naming, asset_forge.AF_PT_Budgets)
 
 def register():
     for cls in classes:

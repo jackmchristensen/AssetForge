@@ -64,6 +64,17 @@ class AF_Settings(bt.PropertyGroup):
         default="PROP_SMALL"
     ) # type: ignore
 
+    import_strictness: bpy.props.EnumProperty(
+        name="Import Strictness",
+        description="How strict validation should be to import into Unreal Editor.",
+        items=[
+            ("ERRORS_ONLY", "Errors Only", "Do not send to Unreal Editor if asset fails to pass validation."),
+            ("ERRORS_AND_WARNINGS", "Errors and Warnings", "Do not send to Unreal Editor if asset fails to pass validation or there are any warngins"),
+            ("DO_NOT_IMPORT", "Do Not Import", "Do not send asset to Unreal Editor.")
+        ],
+        default="ERRORS_ONLY"
+    ) # type: ignore
+
     mesh_prefix: bpy.props.StringProperty(
         name="Mesh Prefix",
         description="Prefix used to denote static mesh assets.",
@@ -87,7 +98,43 @@ class AF_Settings(bt.PropertyGroup):
         description="Prefix used to denote material instances.",
         default=config.get_setting("naming.material_instance_prefix", "MI_")
     ) # type: ignore
+    
+    prop_small_tri_budget: bpy.props.IntProperty(
+        name="Triangle Budget",
+        description="Triangle budget for small props.",
+        default=config.get_setting("asset_budgets.PROP_SMALL.max_triangles", 5000)
+    ) # type: ignore
 
+    prop_small_tex_budget: bpy.props.IntProperty(
+        name="Tex Budget (px)",
+        description="Image texture budget for small props.",
+        default=config.get_setting("asset_budgets.PROP_SMALL.max_texture_size", 2048)
+    ) # type: ignore
+    
+    prop_hero_tri_budget: bpy.props.IntProperty(
+        name="Triangle Budget",
+        description="Triangle budget for hero props.",
+        default=config.get_setting("asset_budgets.HERO_PROP.max_triangles", 5000)
+    ) # type: ignore
+    
+    prop_hero_tex_budget: bpy.props.IntProperty(
+        name="Tex Budget (px)",
+        description="Image texture budget for hero props.",
+        default=config.get_setting("asset_budgets.HERO_PROP.max_texture_size", 4096)
+    ) # type: ignore
+    
+    prop_modular_tri_budget: bpy.props.IntProperty(
+        name="Triangle Budget",
+        description="Triangle budget for modular props.",
+        default=config.get_setting("asset_budgets.MODULAR.max_triangles", 5000)
+    ) # type: ignore
+
+    prop_modular_tex_budget: bpy.props.IntProperty(
+        name="Tex Budget (px)",
+        description="Image texture budget for modular props.",
+        default=config.get_setting("asset_budgets.MODULAR.max_texture_size", 2048)
+    ) # type: ignore
+    
     pass
 
 
@@ -182,10 +229,14 @@ class AF_OT_export(bt.Operator):
             mesh_exporter.export_active_mesh_fbx(object_export_path)
             mesh_exporter.export_mesh_metadata(data_export_path, mesh_data)
 
-            if not mesh_data["validation"]["passed"]:
+            if settings.import_strictness == "DO_NOT_IMPORT":
+                pass
+            elif settings.import_strictness == "ERRORS_AND_WARNINGS" and (mesh_data['validation']['warnings'] != [] or not mesh_data['validation']['passed']):
+                raise RuntimeError(f"Asset failed validation checks. Errors: {mesh_data['validation']['errors']}. Warnings: {mesh_data['validation']['warnings']}")
+            elif not mesh_data['validation']['passed']:
                 raise RuntimeError(f"Asset failed validation checks. Errors: {mesh_data['validation']['errors']}")
-            # else:
-                # run_ue_import(obj.name, context)
+            else:
+                run_ue_import(obj.name, context)
         except Exception as e:
             self.report({"ERROR"}, str(e))
             return {"CANCELLED"}
@@ -195,14 +246,15 @@ class AF_OT_export(bt.Operator):
 
 
 class AF_PT_panel(bt.Panel):
-    bl_label: str       = "Asset Forge"
-    bl_idname: str      = "AF_PT_panel"
-    bl_space_type: str  = "VIEW_3D"
-    bl_region_type: str = "UI"
-    bl_category: str    = "AssetForge"
+    bl_label       = "Asset Forge"
+    bl_idname      = "AF_PT_panel"
+    bl_space_type  = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category    = "AssetForge"
+    bl_order       = 0
 
     def draw(self, context):
-        layout= self.layout
+        layout = self.layout
         assert layout is not None
 
         settings: AF_Settings = context.scene.af # type: ignore
@@ -221,16 +273,15 @@ class AF_PT_panel(bt.Panel):
 
         
 class AF_PT_Settings(bt.Panel):
-    bl_label = "Settings"
-    bl_idname = "AF_PT_settings"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "Asset Forge"
-    bl_parent_id = "AF_PT_panel"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_label        = "Settings"
+    bl_idname       = "AF_PT_settings"
+    bl_space_type   = "VIEW_3D"
+    bl_region_type  = "UI"
+    bl_category     = "AssetForge"
+    bl_order        = 1
 
     def draw(self, context):
-        layout= self.layout
+        layout = self.layout
         assert layout is not None
 
         settings = context.scene.af # type: ignore
@@ -238,14 +289,62 @@ class AF_PT_Settings(bt.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = True
 
-        layout.label(text="Unreal Engine Project Structure:")
+        layout.label(text="Unreal Engine Project Structure")
         layout.prop(settings, "assets_dir")
         layout.prop(settings, "materials_dir")
         layout.separator()
-        layout.label(text="Naming Structure:")
+        layout.prop(settings, "import_strictness")
+        layout.separator()
+
+
+class AF_PT_Naming(bt.Panel):
+    bl_label        = "Naming Structure"
+    bl_idname       = "AF_PT_naming"
+    bl_space_type   = "VIEW_3D"
+    bl_region_type  = "UI"
+    bl_category     = "AssetForge"
+    bl_parent_id    = "AF_PT_settings"
+    bl_options      = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        layout = self.layout
+        assert layout is not None
+
+        settings = context.scene.af # type: ignore
+
+        layout.use_property_split = True
+        layout.use_property_decorate = True
+
         layout.prop(settings, "mesh_prefix")
         layout.prop(settings, "texture_prefix")
         layout.prop(settings, "material_prefix")
         layout.prop(settings, "material_instance_prefix")
 
 
+class AF_PT_Budgets(bt.Panel):
+    bl_label        = "Asset Budgets"
+    bl_idname       = "AF_PT_budgets"
+    bl_space_type   = "VIEW_3D"
+    bl_region_type  = "UI"
+    bl_category     = "AssetForge"
+    bl_parent_id    = "AF_PT_settings"
+    bl_options      = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        layout = self.layout
+        assert layout is not None
+
+        settings = context.scene.af # type: ignore
+
+        layout.use_property_split = True
+        layout.use_property_decorate = True
+
+        layout.label(text="Small Prop")
+        layout.prop(settings, "prop_small_tri_budget")
+        layout.prop(settings, "prop_small_tex_budget")
+        layout.label(text="Hero Prop")
+        layout.prop(settings, "prop_hero_tri_budget")
+        layout.prop(settings, "prop_hero_tex_budget")
+        layout.label(text="Modular Prop")
+        layout.prop(settings, "prop_modular_tri_budget")
+        layout.prop(settings, "prop_modular_tex_budget")
