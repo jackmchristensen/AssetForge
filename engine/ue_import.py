@@ -210,15 +210,28 @@ def ingest_asset(json_path: str) -> None:
     _debug_log(f"Loaded master material: {master_mat}")
     _debug_log(f"Asset material folder: {mat_folder}")
 
-    for mat in material_data:
+    for index, mat in enumerate(material_data):
         try:
             mat_name = mat.get("name", "Material")
             _debug_log(f"Creating material instance: {mat_name}")
+
             mat_instance = _create_material_instance(mat_name, mat_folder, master_mat)
             _debug_log(f"Created: {mat_instance}")
+
             _populate_material_instance(mat_instance, mat, texture_lookup_by_path)
+
             unreal.EditorAssetLibrary.save_loaded_asset(mat_instance)
             unreal.log(f"[Ingest] Created material instance: {mat_name}")
+
+            # For some reason, materials need to be both added and set for multiple materials 
+            # to be assigned.
+            if index > 0:
+                mesh_asset.add_material(mat_instance)
+            mesh_asset.set_material(index, mat_instance)
+            _debug_log(f"Set material {mat_name} to mesh {mesh_asset.get_name()} at slot {index}")
+
+            unreal.EditorAssetLibrary.save_loaded_asset(mesh_asset)
+            _debug_log(f"Added material instance to mesh: {mat_name} -> {mesh_asset.get_name()}")
         except Exception as e:
             _debug_log(f"ERROR creating material {mat_name}: {e}")
             _debug_log(traceback.format_exc())
