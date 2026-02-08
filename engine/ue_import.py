@@ -1,3 +1,4 @@
+from os.path import splitext
 import unreal
 import json
 import re
@@ -98,6 +99,15 @@ def _import_textures(manifest_data, texture_destination_folder: str) -> dict[str
             tex_asset = _load_first(imported_tex_paths)
 
             if isinstance(tex_asset, unreal.Texture):
+                original_name = slot.get("original_name", "")
+                normalized_name = slot.get("normalized_name", "")
+                if original_name != normalized_name:
+                    _debug_log(f"Renaming image texture {original_name} to {normalized_name}")
+                    new_name, _ = splitext(slot.get("normalized_name"))
+                    new_path: str = texture_destination_folder + "/" + new_name
+                    _debug_log(f"New path: {new_path}")
+                    old_path: str = unreal.EditorAssetLibrary.get_path_name_for_loaded_asset(tex_asset)
+                    unreal.EditorAssetLibrary.rename_asset(old_path, new_path)
                 texture_lookup_by_path[tex_path] = tex_asset
             else:
                 unreal.log_warning(f"Imported non-texture from {tex_path}: {imported_tex_paths}")

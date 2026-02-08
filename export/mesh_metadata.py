@@ -4,6 +4,7 @@ import os
 
 from bpy import types as bt
 from typing import Any
+from ..validation import naming
 
 def get_evaluated_mesh_stats(obj: bt.Object, context: bt.Context) -> dict[str, int]:
     """Return mesh statistics after all modifiers are evaluated.
@@ -73,12 +74,16 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
         image = from_node.image
         assert image is not None
 
+        new_name: str = naming.normalize_texture_name(image.name)
+
         colorspace = image.colorspace_settings
         assert colorspace is not None
 
         return {
             "type": "texture",
             "path": bpy.path.abspath(image.filepath),
+            "original_name": image.name_full,
+            "normalized_name": new_name,
             "color_space": colorspace.name
         }
     
@@ -95,6 +100,8 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
                 image = tex_node.image
                 assert image is not None
 
+                new_name: str = naming.normalize_texture_name(image.name)
+
                 colorspace = image.colorspace_settings
                 assert colorspace is not None
 
@@ -102,6 +109,8 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
                     "type": "texture",
                     "usage": "normal",
                     "path": bpy.path.abspath(image.filepath),
+                    "original_name": image.name_full,
+                    "normalized_name": new_name,
                     "color_space": colorspace.name
                 }
 
@@ -149,7 +158,9 @@ def get_material_data(obj: bt.Object) -> list[dict[str, Any]]:
     return materials
 
 
-def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str, ue_assets_dir: str, material_path: str, asset_type: str, context: bt.Context) -> dict[str, Any]:
+def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str, 
+                      ue_assets_dir: str, material_path: str, asset_type: str, 
+                      context: bt.Context) -> dict[str, Any]:
     """Generate export metadata for a Blender object.
 
     Builds a JSON-serializable metadata dictionary containing source

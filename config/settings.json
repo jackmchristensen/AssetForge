@@ -15,9 +15,12 @@
   },
   "material_parameters": {
     "base_color": "BaseColor",
+    "ambient_occlusion": "AmbientOcclusion",
     "metallic": "Metallic",
     "roughness": "Roughness",
     "normal": "Normal",
+    "height": "Height",
+    "emission_color": "EmissionColor",
     "opacity": "Opacity"
   },
   "asset_budgets": {
