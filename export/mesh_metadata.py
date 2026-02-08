@@ -173,7 +173,7 @@ def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str,
     assert isinstance(obj_data, bt.Mesh)
     normalized_obj_name = naming.normalize_mesh_name(obj.name)
 
-    filename: str = f"{obj.name}.fbx"
+    filename: str = f"{normalized_obj_name}.fbx"
     export_path: str = os.path.join(export_dir, filename)
 
     stats: dict[str, int] = get_evaluated_mesh_stats(obj, context)

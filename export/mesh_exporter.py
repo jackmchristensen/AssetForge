@@ -28,10 +28,11 @@ def export_active_mesh_fbx(export_path: str, manifest: dict[str, Any] | None) ->
     if manifest is not None:
         mesh = manifest.get("source", {})
         export = manifest.get("export", {})
-        if mesh.get("name", "") != mesh.get("normalized_name", ""):
-            original_path = export.get("export_path", "")
+        if mesh.get("object_name", "") != mesh.get("normalized_name", ""):
             export_dir = export.get("export_dir", "")
-            os.rename(original_path, export_dir + "/" + mesh.get("normalized_name", "") + ".fbx")
+            original_file = f"{export_dir}/{mesh.get("object_name", "")}"
+            os.rename(f"{original_file}.fbx", export_dir + "/" + mesh.get("normalized_name", "") + ".fbx")
+            os.rename(f"{original_file}.json", export_dir + "/" + mesh.get("normalized_name", "") + ".json")
 
 
 def export_mesh_metadata(export_path: str, mesh_data: dict[str, Any]) -> None:
