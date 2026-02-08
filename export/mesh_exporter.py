@@ -5,7 +5,7 @@ import json
 from typing import Any
 from .. import config
 
-def export_active_mesh_fbx(export_path: str) -> None:
+def export_active_mesh_fbx(export_path: str, manifest: dict[str, Any] | None) -> None:
     """Exports current active mesh as fbx. Creates export directory if 
     one doesn't already exist.
     """
@@ -24,6 +24,14 @@ def export_active_mesh_fbx(export_path: str) -> None:
         axis_forward=config.get_setting("export.fbx_axis_forward", default="-Y"),
         axis_up=config.get_setting("export.fbx_axis_up", default="Z"),
     )
+
+    if manifest is not None:
+        mesh = manifest.get("source", {})
+        export = manifest.get("export", {})
+        if mesh.get("name", "") != mesh.get("normalized_name", ""):
+            original_path = export.get("export_path", "")
+            export_dir = export.get("export_dir", "")
+            os.rename(original_path, export_dir + "/" + mesh.get("normalized_name", "") + ".fbx")
 
 
 def export_mesh_metadata(export_path: str, mesh_data: dict[str, Any]) -> None:

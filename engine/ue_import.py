@@ -187,8 +187,9 @@ def ingest_asset(json_path: str) -> None:
     
     data = json.loads(manifest_path.read_text())
 
-    asset_name = data["source"]["object_name"]
-    fbx_path = data["export"]["export_path"]
+    asset_name = data["source"]["normalized_name"]
+    fbx_path = data["export"]["export_dir"]
+    fbx_path += f"/{asset_name}.fbx"
 
     if not Path(fbx_path).exists():
         raise FileNotFoundError(f"FBX not found: {fbx_path}")

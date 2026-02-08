@@ -226,8 +226,8 @@ class AF_OT_export(bt.Operator):
         mesh_data["validation"] = validate_asset.generate_validation_data(obj, settings.asset_type)
 
         try:
-            mesh_exporter.export_active_mesh_fbx(object_export_path)
             mesh_exporter.export_mesh_metadata(data_export_path, mesh_data)
+            mesh_exporter.export_active_mesh_fbx(object_export_path, mesh_data)
 
             if settings.import_strictness == "DO_NOT_IMPORT":
                 pass
