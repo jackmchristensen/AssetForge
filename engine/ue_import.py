@@ -222,7 +222,7 @@ def ingest_asset(json_path: str) -> None:
 
     for index, mat in enumerate(material_data):
         try:
-            mat_name = mat.get("name", "Material")
+            mat_name = mat.get("normalized_name", "MaterialInstance")
             _debug_log(f"Creating material instance: {mat_name}")
 
             mat_instance = _create_material_instance(mat_name, mat_folder, master_mat)

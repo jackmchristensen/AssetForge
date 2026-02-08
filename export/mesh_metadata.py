@@ -117,7 +117,6 @@ def _classify_shader_input(sock: bt.NodeSocket) -> dict[str, Any]:
     return { "type": "complex" }
 
 
-
 def get_material_data(obj: bt.Object) -> list[dict[str, Any]]:
     materials: list[dict[str, Any]] = []
 
@@ -141,6 +140,8 @@ def get_material_data(obj: bt.Object) -> list[dict[str, Any]]:
         assert alpha is not None
 
         mat_data: dict[str, Any] = { "name": next_material.name }
+        mat_data["normalized_name"] = naming.normalize_material_instance_name(next_material.name)
+
         parameters: dict[str, Any] = {}
 
         parameters["base_color"]      = _classify_shader_input(base_color)
@@ -170,6 +171,7 @@ def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str,
     assert obj is not None
     obj_data = obj.data
     assert isinstance(obj_data, bt.Mesh)
+    normalized_obj_name = naming.normalize_mesh_name(obj.name)
 
     filename: str = f"{obj.name}.fbx"
     export_path: str = os.path.join(export_dir, filename)
@@ -184,6 +186,7 @@ def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str,
         "source": {
             "blend_file": bpy.data.filepath, 
             "object_name": obj.name,
+            "normalized_name": normalized_obj_name,
             "asset_type": asset_type
         },
         "export": {
