@@ -1,6 +1,7 @@
 import os
 import bpy
 import subprocess
+import json
 
 from bpy import types as bt
 from typing import Any
@@ -15,6 +16,13 @@ from . import config
 def update_export_dir(self, context):
     if self.export_dir:
         self.export_dir = bpy.path.abspath(self.export_dir)
+
+
+def make_setting_updater(key_path: str, property_name: str):
+    def update_func(self, context):
+        value = getattr(self, property_name)
+        config.save_setting(key_path, value)
+    return update_func
 
 
 class AF_Settings(bt.PropertyGroup):
@@ -78,61 +86,71 @@ class AF_Settings(bt.PropertyGroup):
     mesh_prefix: bpy.props.StringProperty(
         name="Mesh Prefix",
         description="Prefix used to denote static mesh assets.",
-        default=config.get_setting("naming.mesh_prefix", "SM_")
+        default=config.get_setting("naming_conventions.mesh_prefix", "SM_"),
+        update=make_setting_updater("naming_conventions.mesh_prefix", "mesh_prefix")
     ) # type: ignore
 
     texture_prefix: bpy.props.StringProperty(
         name="Texture Prefix",
         description="Prefix used to denote image texture files.",
-        default=config.get_setting("naming.texture_prefix", "T_")
+        default=config.get_setting("naming_conventions.texture_prefix", "T_"),
+        update=make_setting_updater("naming_conventions.mesh_prefix", "mesh_prefix")
     ) # type: ignore
 
     material_prefix: bpy.props.StringProperty(
         name="Master Material Prefix",
         description="Prefix used to denote master materials.",
-        default=config.get_setting("naming.material_prefix", "M_")
+        default=config.get_setting("naming_conventions.material_prefix", "M_"),
+        update=make_setting_updater("naming_conventions.material_prefix", "material_prefix")
     ) # type: ignore
 
     material_instance_prefix: bpy.props.StringProperty(
         name="Material Instance Prefix",
         description="Prefix used to denote material instances.",
-        default=config.get_setting("naming.material_instance_prefix", "MI_")
+        default=config.get_setting("naming_conventions.material_instance_prefix", "MI_"),
+        update=make_setting_updater("naming_conventions.material_instance_prefix", "material_instance_prefix")
     ) # type: ignore
     
     prop_small_tri_budget: bpy.props.IntProperty(
         name="Triangle Budget",
         description="Triangle budget for small props.",
-        default=config.get_setting("asset_budgets.PROP_SMALL.max_triangles", 5000)
+        default=config.get_setting("asset_budgets.PROP_SMALL.max_triangles", 5000),
+        update=make_setting_updater("asset_budgets.PROP_SMALL.max_triangles", "prop_small_tri_budget")
     ) # type: ignore
 
     prop_small_tex_budget: bpy.props.IntProperty(
         name="Tex Budget (px)",
         description="Image texture budget for small props.",
-        default=config.get_setting("asset_budgets.PROP_SMALL.max_texture_size", 2048)
+        default=config.get_setting("asset_budgets.PROP_SMALL.max_texture_size", 2048),
+        update=make_setting_updater("asset_budgets.PROP_SMALL.max_texture_size", "prop_small_tex_budget")
     ) # type: ignore
     
     prop_hero_tri_budget: bpy.props.IntProperty(
         name="Triangle Budget",
         description="Triangle budget for hero props.",
-        default=config.get_setting("asset_budgets.HERO_PROP.max_triangles", 5000)
+        default=config.get_setting("asset_budgets.HERO_PROP.max_triangles", 5000),
+        update=make_setting_updater("asset_budgets.HERO_PROP.max_triangles", "prop_hero_tri_budget")
     ) # type: ignore
     
     prop_hero_tex_budget: bpy.props.IntProperty(
         name="Tex Budget (px)",
         description="Image texture budget for hero props.",
-        default=config.get_setting("asset_budgets.HERO_PROP.max_texture_size", 4096)
+        default=config.get_setting("asset_budgets.HERO_PROP.max_texture_size", 4096),
+        update=make_setting_updater("asset_budgets.HERO_PROP.max_texture_size", "prop_small_tex_budget")
     ) # type: ignore
     
     prop_modular_tri_budget: bpy.props.IntProperty(
         name="Triangle Budget",
         description="Triangle budget for modular props.",
-        default=config.get_setting("asset_budgets.MODULAR.max_triangles", 5000)
+        default=config.get_setting("asset_budgets.MODULAR.max_triangles", 5000),
+        update=make_setting_updater("asset_budgets.MODULAR.max_triangles", "prop_modular_tri_budget")
     ) # type: ignore
 
     prop_modular_tex_budget: bpy.props.IntProperty(
         name="Tex Budget (px)",
         description="Image texture budget for modular props.",
-        default=config.get_setting("asset_budgets.MODULAR.max_texture_size", 2048)
+        default=config.get_setting("asset_budgets.MODULAR.max_texture_size", 2048),
+        update=make_setting_updater("asset_budgets.MODULAR.max_texture_size", "prop_modular_tex_budget")
     ) # type: ignore
     
     pass

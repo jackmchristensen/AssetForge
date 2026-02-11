@@ -50,3 +50,34 @@ def reload_settings() -> None:
     global _settings_cache
     _settings_cache = None
     load_settings()
+
+
+def save_setting(key_path: str, value: Any, default: Any = None) -> None:
+    """Save a setting using dot notation and persist to settings.json.
+
+        Example: save_setting('naming_conventions.mesh_prefix', 'SM_')
+    """
+
+    global _settings_cache
+
+    settings = load_settings()
+    keys = key_path.split(".")
+
+    current = settings
+    for k in keys:
+        if k not in current:
+            current[k] = {}
+
+        current = current[k]
+
+    current[keys[-1]] = value
+
+    config_path = Path(__file__).parent / "settings.json"
+    temp_path = config_path.with_suffix('.tmp')
+
+    with open(temp_path, 'w') as f:
+        json.dump(settings, f, indent=2)
+
+    temp_path.replace(config_path)
+
+    _settings_cache = settings
