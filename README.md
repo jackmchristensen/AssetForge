@@ -7,33 +7,38 @@
 
 ## Pipeline Overview
   
-  1. **Validation**
+1. **Validation**
   
   Asset Forge runs rule-based validation checks including:
-    - UV map presence
-    - Manifold geometry
-    - Material configuration
-    - Naming conventions
-    - Texture dependencies
+  
+  - UV map presence
+  - Manifold geometry
+  - Material configuration
+  - Naming conventions
+  - Texture dependencies
+    
   Errors and warnings are reported directly in the Blender UI.
 
-  2. **Export**
+2. **Export**
 
   Exports include:
-    - FBX mesh data (with modifiers applied)
-    - JSON metadata manifest containing:
-      - Mesh statistics
-      - Material and texture dependencies
-      - Validation results
-      - Export configuration
+  
+  - FBX mesh data (with modifiers applied)
+  - JSON metadata manifest containing:
+    - Mesh statistics
+    - Material and texture dependencies
+    - Validation results
+    - Export configuration
 
-  3. **Unreal Import**
+3. **Unreal Import**
 
   Python script:
-    - Imports FBX assets
-    - Assigns textures to predefined material instance slots
-    - Applies naming conventions
-    - Reduces manual setup in engine
+  
+  - Imports FBX assets
+  - Assigns textures to predefined material instance slots
+  - Applies naming conventions
+  - Reduces manual setup in engine
+    
   Complex materials are intentionally preserved for manual refinement.
 
 ## Features
@@ -50,22 +55,28 @@
 
 ## Installation
 
+**Option 1 — Install from GitHub (Recommended)**
+
   ```bash
-```
   cd /path/to/blender/5.0/scripts/addons/
   git clone https://github.com/jackmchristensen/AssetForge.git asset_forge
   ```
-  ```
 
-  Then:
-  Open Blender → Preferences →  Add-ons → Search "Asset Forge" → Enable
+  Then enable addon:
 
-  Or
+  1. Open Blender
+  2. Go to Edit → Preferences → Add-ons
+  3. Search for Asset Forge
+  4. Enable the addon
 
-  Download repo as zip
+  **Option 2 — Install from ZIP**
 
-  Then:
-  Open Blender → Preferences →  Add-ons → Install from Disk...
+  1. Download the repository as a ZIP file
+  2. Open Blender
+  3. Go to Edit → Preferences → Add-ons
+  4. Click Install from Disk...
+  5. Select ZIP file
+  6. Enable Asset Forge
 
 ## Usage
 
@@ -87,7 +98,8 @@
 
   Asset Forge inspects Principled BSDF materials and extracts:
 
-    - Texture dependencies
-    - Basic parameter values
-    - Shader complexity classification
+  - Texture dependencies
+  - Basic parameter values
+  - Shader complexity classification
+    
   Material recreation is intentionally conservative to preserve artistic intent.
