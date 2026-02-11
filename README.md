@@ -50,11 +50,12 @@
 
 ## Installation
 
-  ``bash
+  ```bash
+```
   cd /path/to/blender/5.0/scripts/addons/
   git clone https://github.com/jackmchristensen/AssetForge.git asset_forge
   ```
-```
+  ```
 
   Then:
   Open Blender → Preferences →  Add-ons → Search "Asset Forge" → Enable
@@ -85,6 +86,7 @@
   **Material System**
 
   Asset Forge inspects Principled BSDF materials and extracts:
+
     - Texture dependencies
     - Basic parameter values
     - Shader complexity classification
