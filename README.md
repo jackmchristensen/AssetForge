@@ -58,7 +58,7 @@
 **Option 1 — Install from GitHub (Recommended)**
 
   ```bash
-  cd /path/to/blender/5.0/scripts/addons/
+  cd <Blender install directory>/<version>/scripts/addons/
   git clone https://github.com/jackmchristensen/AssetForge.git asset_forge
   ```
 
