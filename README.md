@@ -48,7 +48,7 @@
   - Material analysis for Principled BSDF shaders:
     - Constant values
     - Texture inputs
-    - complex node detection
+    - Complex node detection
   - Texture classification with colorspace awareness
   - Asset type profiles (small props, hero props, modular pieces)
   - Automated Unreal import via Python scripting
