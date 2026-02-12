@@ -38,6 +38,10 @@
       "enforce_grid_alignment": true
     }
   },
+  "modular_mesh_units": {
+    "unit": 0.1,
+    "eps": 1e-5
+  },
   "export": {
     "fbx_axis_forward": "-Y",
     "fbx_axis_up": "Z",

@@ -65,6 +65,11 @@ def generate_validation_data(obj: bpy.types.Object, asset_type: str) -> dict[str
             severity="warning",
             check=warning_checks.validate_texture_size # type: ignore
         ),
+        vt.ValidationRule(
+            code="MESH_NOT_MODULAR",
+            severity="error",
+            check=error_checks.validate_modular # type: ignore
+        ),
     ]
 
     error_items: list[dict[str, Any]] = []
