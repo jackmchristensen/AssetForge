@@ -42,6 +42,16 @@ class AF_Settings(bt.PropertyGroup):
         subtype="FILE_PATH",
         default="",
     ) # type: ignore
+    
+    export_ext: bpy.props.EnumProperty(
+        name="Export As",
+        description="Choose what 3D object you'd like to export.",
+        items=[
+            ("fbx", "FBX", "FBX file"),
+            ("obj", "OBJ", "OBJ file")
+        ],
+        default="fbx"
+    ) # type: ignore
 
     ue_master_material: bpy.props.StringProperty(
         name="Master Material",
@@ -240,12 +250,12 @@ class AF_OT_export(bt.Operator):
         if settings.ue_master_material != "":
             master_mat_path = f"/Game/{settings.materials_dir}/{settings.ue_master_material}"
 
-        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, ue_project_path, ue_assets_dir, master_mat_path, settings.asset_type, bpy.context)
+        mesh_data: dict[str, Any] = mesh_metadata.generate_metadata(obj, export_dir, ue_project_path, ue_assets_dir, master_mat_path, settings.asset_type, settings.export_ext, bpy.context)
         mesh_data["validation"] = validate_asset.generate_validation_data(obj, settings.asset_type)
 
         try:
             mesh_exporter.export_mesh_metadata(data_export_path, mesh_data)
-            mesh_exporter.export_active_mesh_fbx(object_export_path, mesh_data)
+            mesh_exporter.export_active_mesh_fbx(object_export_path, mesh_data, settings.export_ext)
 
             if settings.import_strictness == "DO_NOT_IMPORT":
                 pass
@@ -254,7 +264,7 @@ class AF_OT_export(bt.Operator):
             elif not mesh_data['validation']['passed']:
                 raise RuntimeError(f"Asset failed validation checks. Errors: {mesh_data['validation']['errors']}")
             else:
-                run_ue_import(obj.name, context)
+                run_ue_import(mesh_data["source"]["normalized_name"], context)
         except Exception as e:
             self.report({"ERROR"}, str(e))
             return {"CANCELLED"}
@@ -312,6 +322,7 @@ class AF_PT_panel(bt.Panel):
         layout.use_property_decorate = True
 
         layout.prop(settings, "asset_type")
+        layout.prop(settings, "export_ext")
         layout.prop(settings, "export_dir")
         layout.separator()
         layout.label(text="Unreal Engine Info:")

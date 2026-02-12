@@ -161,7 +161,7 @@ def get_material_data(obj: bt.Object) -> list[dict[str, Any]]:
 
 def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str, 
                       ue_assets_dir: str, material_path: str, asset_type: str, 
-                      context: bt.Context) -> dict[str, Any]:
+                      export_ext: str, context: bt.Context) -> dict[str, Any]:
     """Generate export metadata for a Blender object.
 
     Builds a JSON-serializable metadata dictionary containing source
@@ -173,7 +173,7 @@ def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str,
     assert isinstance(obj_data, bt.Mesh)
     normalized_obj_name = naming.normalize_mesh_name(obj.name)
 
-    filename: str = f"{normalized_obj_name}.fbx"
+    filename: str = f"{normalized_obj_name}.{export_ext}"
     export_path: str = os.path.join(export_dir, filename)
 
     stats: dict[str, int] = get_evaluated_mesh_stats(obj, context)
@@ -191,7 +191,7 @@ def generate_metadata(obj: bt.Object, export_dir: str, ue_project_path: str,
         },
         "export": {
             "target": "unreal",
-            "format": "fbx",
+            "format": export_ext,
             "export_path": export_path,
             "export_dir": export_dir,
             "timestamp": datetime.datetime.now(tz=datetime.timezone.utc).strftime(

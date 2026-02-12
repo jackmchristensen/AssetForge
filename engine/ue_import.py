@@ -180,15 +180,18 @@ def ingest_asset(json_path: str) -> None:
     Does not use FBX default import settings so only the mesh gets imported automatically. Other assets 
     get imported manually.
     """
-    
+   
+    _debug_log("Starting UE import.")
     manifest_path = Path(json_path)
     if not manifest_path.exists():
+        _debug_log(f"Manifest not found at {manifest_path}")
         raise FileNotFoundError(f"Manifest not found: {json_path}.")
     
     data = json.loads(manifest_path.read_text())
 
     asset_name = data["source"]["normalized_name"]
     fbx_path = data["export"]["export_path"]
+    _debug_log(f"Object path: {fbx_path}")
     # fbx_path += f"/{asset_name}.fbx"
 
     if not Path(fbx_path).exists():

@@ -40,6 +40,8 @@
   },
   "export": {
     "fbx_axis_forward": "-Y",
-    "fbx_axis_up": "Z"
+    "fbx_axis_up": "Z",
+    "obj_axis_forward": "NEGATIVE_Y",
+    "obj_axis_up": "Z"
   }
 }
