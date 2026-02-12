@@ -94,7 +94,7 @@ class AF_Settings(bt.PropertyGroup):
         name="Texture Prefix",
         description="Prefix used to denote image texture files.",
         default=config.get_setting("naming_conventions.texture_prefix", "T_"),
-        update=make_setting_updater("naming_conventions.mesh_prefix", "mesh_prefix")
+        update=make_setting_updater("naming_conventions.texture_prefix", "texture_prefix")
     ) # type: ignore
 
     material_prefix: bpy.props.StringProperty(
@@ -136,7 +136,7 @@ class AF_Settings(bt.PropertyGroup):
         name="Tex Budget (px)",
         description="Image texture budget for hero props.",
         default=config.get_setting("asset_budgets.HERO_PROP.max_texture_size", 4096),
-        update=make_setting_updater("asset_budgets.HERO_PROP.max_texture_size", "prop_small_tex_budget")
+        update=make_setting_updater("asset_budgets.HERO_PROP.max_texture_size", "prop_hero_tex_budget")
     ) # type: ignore
     
     prop_modular_tri_budget: bpy.props.IntProperty(

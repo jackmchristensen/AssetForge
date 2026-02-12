@@ -52,10 +52,10 @@ def reload_settings() -> None:
     load_settings()
 
 
-def save_setting(key_path: str, value: Any, default: Any = None) -> None:
+def save_setting(key_path: str, value: Any) -> None:
     """Save a setting using dot notation and persist to settings.json.
 
-        Example: save_setting('naming_conventions.mesh_prefix', 'SM_')
+    Example: save_setting('naming_conventions.mesh_prefix', 'SM_')
     """
 
     global _settings_cache
@@ -64,11 +64,14 @@ def save_setting(key_path: str, value: Any, default: Any = None) -> None:
     keys = key_path.split(".")
 
     current = settings
-    for k in keys:
+    for k in keys[:-1]:
         if k not in current:
             current[k] = {}
 
         current = current[k]
+
+        if not isinstance(current, dict):
+            raise ValueError(f"Cannot navigate to {key_path}: '{k}' is not a dict")
 
     current[keys[-1]] = value
 
