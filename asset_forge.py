@@ -263,6 +263,37 @@ class AF_OT_export(bt.Operator):
         return {"FINISHED"}
 
 
+class AF_OT_reset_default(bt.Operator):
+    bl_idname: str  = "af.reset_default"
+    bl_label: str   = "Reset settings to default"
+    bl_options: set = {"REGISTER", "UNDO"}
+
+    def execute(self, context: bt.Context):
+        settings: AF_Settings = context.scene.af # type: ignore
+
+        try:
+            config.reset_default()
+            
+            settings.mesh_prefix = config.get_setting("naming_conventions.mesh_prefix", "SM_")
+            settings.texture_prefix = config.get_setting("naming_conventions.texture_prefix", "T_")
+            settings.material_prefix = config.get_setting("naming_conventions.material_prefix", "M_")
+            settings.material_instance_prefix = config.get_setting("naming_conventions.material_instance_prefix", "MI_")
+
+            settings.prop_small_tri_budget = config.get_setting("asset_budgets.prop_small_tri_budget", 5000)
+            settings.prop_small_tex_budget = config.get_setting("asset_budgets.prop_small_tex_budget", 2048)
+            settings.prop_hero_tri_budget = config.get_setting("asset_budgets.prop_hero_tri_budget", 50000)
+            settings.prop_hero_tex_budget = config.get_setting("asset_budgets.prop_hero_tex_budget", 4096)
+            settings.prop_modular_tri_budget = config.get_setting("asset_budgets.prop_modular_tri_budget", 2000)
+            settings.prop_modular_tex_budget = config.get_setting("asset_budgets.prop_modular_tex_budget", 2048)
+        except Exception as e:
+            self.report({"ERROR"}, str(e))
+            return {"CANCELLED"}
+
+        self.report({"INFO"}, "Reset settings to default")
+        return{"FINISHED"}
+
+
+
 class AF_PT_panel(bt.Panel):
     bl_label       = "Asset Forge"
     bl_idname      = "AF_PT_panel"
@@ -313,6 +344,7 @@ class AF_PT_Settings(bt.Panel):
         layout.separator()
         layout.prop(settings, "import_strictness")
         layout.separator()
+        layout.operator("af.reset_default", text="Reset Settings")
 
 
 class AF_PT_Naming(bt.Panel):

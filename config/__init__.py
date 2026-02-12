@@ -84,3 +84,23 @@ def save_setting(key_path: str, value: Any) -> None:
     temp_path.replace(config_path)
 
     _settings_cache = settings
+
+
+def reset_default() -> None:
+    """Reset settings.json to defaults from default_settings.json"""
+
+    global _settings_cache
+
+    current_settings = Path(__file__).parent / "settings.json"
+    default_settings = Path(__file__).parent / "default_settings.json"
+
+    if not default_settings.exists():
+        raise FileNotFoundError(f"Default settings file not found at {default_settings}")
+
+    with open(default_settings, 'r') as f:
+        defaults = json.load(f)
+
+    with open(current_settings, 'w') as f:
+        json.dump(defaults, f, indent=2)
+
+    reload_settings()

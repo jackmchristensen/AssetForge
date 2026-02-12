@@ -38,7 +38,7 @@
       "enforce_grid_alignment": true
     }
   },
-  "export":{
+  "export": {
     "fbx_axis_forward": "-Y",
     "fbx_axis_up": "Z"
   }
